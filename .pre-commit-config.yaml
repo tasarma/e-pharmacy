@@ -1,0 +1,35 @@
+fail_fast: true
+
+repos:
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+    -   id: trailing-whitespace
+    -   id: end-of-file-fixer
+    -   id: check-yaml
+    -   id: check-added-large-files
+
+  # Ruff for Python formatting and linting
+- repo: https://github.com/astral-sh/ruff-pre-commit
+  rev: v0.12.4
+  hooks:
+    - id: ruff-check
+      name: Ruff Linter (backend)
+      args: [ --fix ]
+      files: ^backend/ # Only  backend folder
+      stages: [pre-commit]
+    - id: ruff-format
+      name: Ruff Linter (backend)
+      files: ^backend/ # Only  backend folder
+      stages: [pre-commit]
+      
+- repo: local
+  hooks:
+    # Backend Django tests
+    - id: django-tests
+      name: Django Tests (backend)
+      entry: bash -c "cd backend && python manage.py test"
+      language: system
+      pass_filenames: false
+      stages: [pre-commit, pre-push]
+      always_run: true # Ensures tests run even if no staged files
