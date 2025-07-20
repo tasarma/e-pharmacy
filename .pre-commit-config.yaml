@@ -22,7 +22,7 @@ repos:
       name: Ruff Linter (backend)
       files: ^backend/ # Only  backend folder
       stages: [pre-commit]
-      
+
 - repo: local
   hooks:
     # Backend Django tests
