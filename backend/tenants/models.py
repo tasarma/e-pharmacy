@@ -5,7 +5,12 @@ import uuid
 
 
 class Tenant(models.Model):
-    """Contains data and settings for the tenant model."""
+    """
+    Represents a tenant (i.e., an organization or customer) in a multi-tenant system.
+
+    Each tenant has a unique subdomain used for routing, an optional owner (typically a user), 
+    and basic metadata such as creation date, active status.
+    """
 
     id = models.UUIDField(default=uuid.uuid4, primary_key=True, editable=False)
     name = models.CharField(max_length=100)
