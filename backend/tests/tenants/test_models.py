@@ -5,7 +5,7 @@ from django.core.exceptions import ValidationError
 from tenants.models import Tenant
 
 
-class TenantModelTest(TestCase):
+class TestTenantModel(TestCase):
     def setUp(self):
         # Arrange
         self.user = User.objects.create_user(
