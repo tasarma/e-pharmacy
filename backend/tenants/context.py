@@ -2,10 +2,7 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from typing import Any, Dict, Generator, Optional
 
-from .models import Tenant
 from .exceptions import TenantError
-
-TenantType = Tenant
 
 state: ContextVar[Optional[Dict[str, Any]]] = ContextVar("tenant-state", default=None)
 
@@ -13,18 +10,12 @@ state: ContextVar[Optional[Dict[str, Any]]] = ContextVar("tenant-state", default
 def get_state() -> Dict[str, Any]:
     """
     Get the current tenant context state.
-
-    Returns a dictionary with:
-    - 'enabled': bool — whether tenant enforcement is active
-    - 'tenant': object — the current tenant (can be None)
-
-    Default:
-        {"enabled": True, "tenant": None}
+    Default: {"enabled": True, "tenant": None}
     """
     return state.get() or {"enabled": True, "tenant": None}
 
 
-def get_current_tenant() -> TenantType:
+def get_current_tenant() -> Any:
     """
     Return the current tenant if tenant enforcement is enabled.
 
@@ -40,14 +31,10 @@ def get_current_tenant() -> TenantType:
 
 @contextmanager
 def set_tenant_context(
-    tenant: Optional[TenantType] = None, enabled: bool = True
+    tenant: Optional[Any] = None, enabled: bool = True
 ) -> Generator[None, None, None]:
     """
     Temporarily set the tenant context.
-
-    Args:
-        tenant: The tenant to set in context (can be None).
-        enabled: Whether tenant enforcement is active.
     """
     previous_state = get_state()
 
