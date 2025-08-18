@@ -1,9 +1,6 @@
-from django.test import TestCase, TransactionTestCase
-from users.models import CustomUser as User
-from django.db import models, connection
-from unittest.mock import patch
+from django.db import models
 
-from tenants.models import Tenant, TenantAwareModel
+from tenants.models import TenantAwareModel
 
 
 class TestOrder(TenantAwareModel):
