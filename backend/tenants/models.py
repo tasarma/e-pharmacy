@@ -1,6 +1,5 @@
 from django.db import models
 from django.db.models.expressions import BaseExpression
-from django.conf import settings
 from typing import Optional
 import uuid
 
@@ -17,11 +16,6 @@ class Tenant(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=100)
     subdomain = models.CharField(max_length=60, unique=True, db_index=True)
-    owner = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        null=True,
-        on_delete=models.SET_NULL,
-    )
     created_at = models.DateTimeField(auto_now_add=True)
     active = models.BooleanField(default=True)
 

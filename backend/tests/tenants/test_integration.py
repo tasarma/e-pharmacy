@@ -1,18 +1,8 @@
 from django.test import TestCase
-from django.contrib.auth.models import User
-from django.db import models
 from unittest.mock import patch
 
-from tenants.models import Tenant, TenantAwareModel
-
-
-class TestOrder(TenantAwareModel):
-    """Test model for testing TenantAwareModel functionality"""
-
-    name = models.CharField(max_length=100)
-
-    class Meta:
-        app_label = "tenants"
+from tenants.models import Tenant
+from tests.models import TestOrder
 
 
 class TestTenantSystemIntegration(TestCase):
@@ -28,12 +18,10 @@ class TestTenantSystemIntegration(TestCase):
 
     def test_complete_tenant_workflow(self):
         """End-to-end test of tenant creation and usage"""
-        # Arrange
-        user = User.objects.create_user(username="owner", password="test123")
 
         # Act
         tenant = Tenant.objects.create(
-            name="Complete Test Tenant", subdomain="complete", owner=user
+            name="Complete Test Tenant", subdomain="complete"
         )
 
         with patch("tenants.models.get_current_tenant", return_value=tenant):

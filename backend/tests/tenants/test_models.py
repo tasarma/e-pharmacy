@@ -1,40 +1,29 @@
 from django.test import TestCase
-from django.contrib.auth.models import User
+from users.models import CustomUser as User
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
-from django.db import models
 from unittest.mock import patch
 
-from tenants.models import Tenant, TenantAwareModel
-
-
-class TestProduct(TenantAwareModel):
-    name = models.CharField(max_length=100)
-
-    class Meta:
-        app_label = "tenants"
+from tenants.models import Tenant
+from tests.models import TestOrder as TestProduct
 
 
 class TestTenantModel(TestCase):
     def setUp(self):
         # Arrange
-        self.user = User.objects.create_user(
-            username="testuser", email="test@gmail.com", password="123"
-        )
+        self.user = User.objects.create_user(email="test@gmail.com", password="123")
 
     def test_tenant_can_be_created_with_required_fields(self):
         # Act
         tenant = Tenant.objects.create(
             name="Alice's Shop",
             subdomain="alice",
-            owner=self.user,
             active=True,
         )
 
         # Assert
         self.assertEqual(tenant.name, "Alice's Shop")
         self.assertEqual(tenant.subdomain, "alice")
-        self.assertEqual(tenant.owner, self.user)
         self.assertTrue(tenant.active)
         self.assertIsNotNone(tenant.created_at)
 
