@@ -1,7 +1,10 @@
-.PHONY: format tests
+.PHONY: format tests run
 
 format:
 	pre-commit run --all-files
 
-tests:
-	python manage.py test --parallel 2 tests/*
+test:
+	python manage.py test  --parallel auto --keepdb --settings=config.settings_test tests
+
+run:
+	python manage.py runserver
