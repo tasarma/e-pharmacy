@@ -8,6 +8,7 @@ dependencies = [
     "django>=5.2.1",
     "djangorestframework>=3.16.1",
     "djangorestframework-simplejwt>=5.5.1",
+    "djoser>=2.3.3",
     "uuid>=1.30",
 ]
 
