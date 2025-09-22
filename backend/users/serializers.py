@@ -13,7 +13,9 @@ class TenantAwareTokenObtainSerializer(TokenObtainPairSerializer):
         current_tenant = get_current_tenant()
 
         if self.user.tenant_id != current_tenant.id:
-            raise serializers.ValidationError("Invalid tenant for this user.")
+            raise serializers.ValidationError(
+                f"user doesn't belong to tenant '{current_tenant.name}'."
+            )
 
         return data
 
