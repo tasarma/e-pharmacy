@@ -151,7 +151,7 @@ SIMPLE_JWT = {
     "AUTH_HEADER_TYPES": ("Bearer",),
     "ACCESS_TOKEN_LIFETIME": timedelta(hours=3),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
-    "ROTATE_REFRESH_TOKENS": False,
+    "ROTATE_REFRESH_TOKENS": False,  # TODO True in production
     "BLACKLIST_AFTER_ROTATION": True,
     "TOKEN_OBTAIN_SERIALIZER": "users.serializers.TenantAwareTokenObtainSerializer",
 }
@@ -160,6 +160,8 @@ DJOSER = {
     # "LOGIN_FIELD": "email",
     "TOKEN_MODEL": None,
     "USER_CREATE_PASSWORD_RETYPE": False,
+    "SEND_CONFIRMATION_EMAIL": False,  # TODO True in production
+    "PASSWORD_RESET_CONFIRM_URL": False,  # TODO True in production
     "SERIALIZERS": {
         "user_create": "users.serializers.TenantAwareUserCreateSerializer",
     },
