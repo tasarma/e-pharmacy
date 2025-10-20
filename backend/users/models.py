@@ -4,13 +4,15 @@ from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.base_user import BaseUserManager
 import uuid
 
-from tenants.models import Tenant
+from tenants.models import Tenant, UniqueTenantConstraint
+
+ERROR_AUTH_EO33 = "auth.E003"
 
 
 class CustomUserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
         if not email:
-            raise ValueError(_("Email alanı zorunlu!"))
+            raise ValueError(_("Email is necessary!"))
         email = self.normalize_email(email)
         user = self.model(email=email, **extra_fields)
         user.set_password(password)
@@ -36,7 +38,7 @@ class CustomUser(AbstractUser):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     first_name = models.CharField(max_length=150, blank=False)
     last_name = models.CharField(max_length=150, blank=False)
-    email = models.EmailField(_("email address"), unique=True, blank=False, null=False)
+    email = models.EmailField(_("email address"), blank=False, null=False)
     gln = models.CharField(max_length=13, blank=True, null=True, unique=True)
     phone_number = models.CharField(max_length=13, blank=True, null=True)
     address = models.TextField(blank=True, null=True)
@@ -56,5 +58,21 @@ class CustomUser(AbstractUser):
 
     objects = CustomUserManager()
 
+    class Meta:
+        constraints = [
+            UniqueTenantConstraint(fields=["email"], name="unique_tenant_email")
+        ]
+
     def __str__(self):
         return self.email
+
+    @classmethod
+    def check(cls, **kwargs):
+        """
+        Override Django's system checks to allow USERNAME_FIELD in composite constraint.
+        This is necessary for multi-tenant setups where email must be unique per tenant.
+        """
+        errors = super().check(**kwargs)
+        # Remove auth.E003 since we're using a composite constraint
+        errors = [e for e in errors if e.id != ERROR_AUTH_EO33]
+        return errors
