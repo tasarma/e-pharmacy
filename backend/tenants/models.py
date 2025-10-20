@@ -1,5 +1,7 @@
 from django.db import models
+from django.core.exceptions import ValidationError
 from django.db.models.expressions import BaseExpression
+from django.db.models.constraints import UniqueConstraint
 from typing import Optional
 import uuid
 
@@ -105,3 +107,30 @@ class TenantAwareModel(TenantAwareAbstract):
 
     class Meta:
         abstract = True
+
+
+class UniqueTenantConstraint(UniqueConstraint):
+    def __init__(self, *expressions, fields=(), **kwargs):
+        if TENANT_FIELD_NAME not in fields:
+            fields = (TENANT_FIELD_NAME,) + tuple(fields)
+
+        super().__init__(*expressions, fields=fields, **kwargs)
+
+    def validate(self, model, instance, exclude=None, *args, **kwargs):
+        if exclude and TENANT_FIELD_NAME in exclude:
+            exclude = [field for field in exclude if field != TENANT_FIELD_NAME]
+
+        setattr(instance, TENANT_FIELD_NAME, get_current_tenant())
+
+        try:
+            super().validate(model, instance, exclude, *args, **kwargs)
+        except ValidationError as e:
+            use_default_message = (
+                self.violation_error_message == self.default_violation_error_message
+            )
+            if use_default_message:
+                fields = set(self.fields) ^ {TENANT_FIELD_NAME}
+                error = instance.unique_error_message(model, list(fields))
+                self.violation_error_message = error.message % error.params
+
+            raise ValidationError(self.violation_error_message) from e

@@ -137,6 +137,10 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 AUTH_USER_MODEL = "users.CustomUser"
 
+AUTHENTICATION_BACKENDS = [
+    "users.backends.TenantAwareAuthBackend",
+    "django.contrib.auth.backends.ModelBackend",
+]
 
 # put on your settings.py file below INSTALLED_APPS
 REST_FRAMEWORK = {
@@ -208,11 +212,11 @@ LOGGING = {
     "loggers": {
         "django_structlog": {
             "handlers": ["console", "json_file"],
-            "level": "DEBUG",
+            "level": os.getenv("DJANGO_LOG_LEVEL", "DEBUG"),
         },
         "root": {
             "handlers": ["console", "json_file"],
-            "level": "DEBUG",
+            "level": os.getenv("DJANGO_LOG_LEVEL", "DEBUG"),
         },
     },
 }
