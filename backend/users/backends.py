@@ -9,22 +9,21 @@ class TenantAwareAuthBackend(ModelBackend):
     Authenticate users within their tenant context.
     This ensures users can only log in to their assigned tenant.
     """
-    
     def authenticate(self, request, username=None, password=None, **kwargs):
         UserModel = get_user_model()
         
         if username is None:
-            username = kwargs.get(UserModel.USERNAME_FIELD)
+            email = kwargs.get(UserModel.USERNAME_FIELD)
         
-        if username is None:
+        if email is None:
             return None
-        
+
         try:
             tenant = get_current_tenant()
             if tenant is None:
                 return None
             
-            user = UserModel.objects.get(email=username, tenant=tenant)
+            user = UserModel.objects.get(email=email, tenant=tenant)
             
         except UserModel.DoesNotExist:
             # Run the default password hasher once to reduce timing attacks

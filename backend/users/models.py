@@ -1,10 +1,11 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from django.contrib.auth.base_user import BaseUserManager
 import uuid
 
-from tenants.models import Tenant, UniqueTenantConstraint
+from tenants.models import Tenant, TenantAwareModel, UniqueTenantConstraint
+from users.managers import CustomUserManager
+
 
 ERROR_AUTH_EO33 = "auth.E003"
 
@@ -34,14 +35,13 @@ class CustomUserManager(BaseUserManager):
 
 
 class CustomUser(AbstractUser):
+    """
+    Minimal user model - authentication only.
+    """
+
     username = None
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    first_name = models.CharField(max_length=150, blank=False)
-    last_name = models.CharField(max_length=150, blank=False)
     email = models.EmailField(_("email address"), blank=False, null=False)
-    gln = models.CharField(max_length=13, blank=True, null=True, unique=True)
-    phone_number = models.CharField(max_length=13, blank=True, null=True)
-    address = models.TextField(blank=True, null=True)
     tenant = models.ForeignKey(
         Tenant, related_name="users", on_delete=models.CASCADE, null=True, blank=True
     )
@@ -76,3 +76,48 @@ class CustomUser(AbstractUser):
         # Remove auth.E003 since we're using a composite constraint
         errors = [e for e in errors if e.id != ERROR_AUTH_EO33]
         return errors
+
+
+class UserProfile(TenantAwareModel):
+    """
+    Business data and application-specific user information.
+    """
+
+    user = models.OneToOneField(
+        CustomUser, on_delete=models.CASCADE, related_name="profile"
+    )
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
+    # Contact Information
+    phone_number = models.CharField(max_length=20, blank=True)
+    mobile_number = models.CharField(max_length=20, blank=True)
+
+    # Personal Details
+    first_name = models.CharField(max_length=150, blank=False)
+    last_name = models.CharField(max_length=150, blank=False)
+    date_of_birth = models.DateField(null=True, blank=True)
+    address = models.TextField(blank=True, null=True)
+    gln_number = models.CharField(max_length=13, blank=True, null=True, unique=True)
+
+    # Preferences
+    email_notifications = models.BooleanField(default=False)
+
+    # Metadata
+    last_login_ip = models.GenericIPAddressField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            UniqueTenantConstraint(fields=["user"], name="unique_tenant_user_profile")
+        ]
+
+    def __str__(self):
+        return f"{self.user.email} - Profile"
+
+    @property
+    def display_name(self):
+        """Convenient display name"""
+        if self.user.first_name and self.user.last_name:
+            return f"{self.user.first_name} {self.user.last_name}"
+        return self.user.email
