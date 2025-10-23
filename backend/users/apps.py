@@ -11,11 +11,12 @@ class UsersConfig(AppConfig):
         Import signal handlers when Django starts.
 
         This method is called exactly once when the application registry
-        is fully populated. This is the right place to register signal handlers.
+        is fully populated.
+
         """
         try:
             import users.signals  # noqa: F401
 
-            print("✅ Users app signals registered")
+            print("Users app signals registered")
         except ImportError as e:
-            print(f"❌ Failed to import users.signals: {e}")
+            print(f"Failed to import users.signals: {e}")

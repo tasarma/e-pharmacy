@@ -10,30 +10,6 @@ from users.managers import CustomUserManager
 ERROR_AUTH_EO33 = "auth.E003"
 
 
-class CustomUserManager(BaseUserManager):
-    def create_user(self, email, password=None, **extra_fields):
-        if not email:
-            raise ValueError(_("Email is necessary!"))
-        email = self.normalize_email(email)
-        user = self.model(email=email, **extra_fields)
-        user.set_password(password)
-        user.save(using=self._db)
-        return user
-
-    def create_superuser(self, email, password=None, **extra_fields):
-        extra_fields.setdefault("is_staff", True)
-        extra_fields.setdefault("is_superuser", True)
-        extra_fields.setdefault("is_active", True)
-        extra_fields.setdefault("role", "admin")
-
-        if extra_fields.get("is_staff") is not True:
-            raise ValueError(_("Superuser must have is_staff=True."))
-        if extra_fields.get("is_superuser") is not True:
-            raise ValueError(_("Superuser must have is_superuser=True."))
-
-        return self.create_user(email, password, **extra_fields)
-
-
 class CustomUser(AbstractUser):
     """
     Minimal user model - authentication only.
@@ -86,7 +62,6 @@ class UserProfile(TenantAwareModel):
     user = models.OneToOneField(
         CustomUser, on_delete=models.CASCADE, related_name="profile"
     )
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
     # Contact Information
     phone_number = models.CharField(max_length=20, blank=True)
