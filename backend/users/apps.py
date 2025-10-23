@@ -12,6 +12,7 @@ class UsersConfig(AppConfig):
 
         This method is called exactly once when the application registry
         is fully populated.
+
         """
         try:
             import users.signals  # noqa: F401
