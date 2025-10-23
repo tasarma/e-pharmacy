@@ -2,7 +2,6 @@ from django.dispatch import receiver
 from django.db.models.signals import post_save, pre_delete
 from django.contrib.auth import get_user_model
 
-from .models import UserProfile
 
 User = get_user_model()
 
@@ -11,6 +10,8 @@ User = get_user_model()
 def create_user_profile(sender, instance, created, **kwargs):
     """Create UserProfile automatically when User is created"""
     if created:
+        from users.models import UserProfile
+
         UserProfile.objects.create(user=instance, tenant=instance.tenant)
 
 
