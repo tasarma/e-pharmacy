@@ -4,7 +4,7 @@ from tenants.context import get_current_tenant
 from rest_framework import serializers
 
 from tenants.exceptions import TenantError
-from .models import CustomUser
+from .models import CustomUser, UserProfile
 
 
 class TenantAwareTokenObtainSerializer(TokenObtainPairSerializer):
@@ -53,3 +53,51 @@ class TenantAwareUserCreateSerializer(UserCreateSerializer):
         user = super().create(validated_data)
 
         return user
+
+
+# =============
+# Profile
+# =============
+
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    user_email = serializers.EmailField(source="user.email", read_only=True)
+    first_name = serializers.CharField(required=True)
+    last_name = serializers.CharField(required=True)
+
+    class Meta:
+        model = UserProfile
+        fields = [
+            "id",
+            "user",
+            "user_email",
+            "phone_number",
+            "mobile_number",
+            "first_name",
+            "last_name",
+            "date_of_birth",
+            "address",
+            "gln_number",
+            "email_notifications",
+            "last_login_ip",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "user", "created_at", "updated_at", "last_login_ip"]
+
+    def validate_gln_number(self, value):
+        """Validate GLN number format (13 digits)."""
+        if value and not value.isdigit():
+            raise serializers.ValidationError("GLN must contain only digits.")
+        if value and len(value) != 13:
+            raise serializers.ValidationError("GLN must be exactly 13 digits.")
+        return value
+
+    def validate(self, attrs):
+        """Additional validation for profile data."""
+        # Ensure first_name and last_name are provided
+        if not attrs.get("first_name"):
+            raise serializers.ValidationError({"first_name": "First name is required."})
+        if not attrs.get("last_name"):
+            raise serializers.ValidationError({"last_name": "Last name is required."})
+        return attrs
