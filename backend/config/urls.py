@@ -24,12 +24,17 @@ from drf_spectacular.views import (
     SpectacularRedocView,
 )
 
+from users import urls as user_urls
+
+
 urlpatterns = [
     path("admin/", admin.site.urls),
-    # Auth
+    # Auth (Djoser + JWT)
     re_path(r"^auth/", include("djoser.urls")),
     re_path(r"^auth/", include("djoser.urls.jwt")),
-    # Swager
+    # API endpoints (versioned)
+    path("api/v1/", include(user_urls)),
+    # API Schema + Docs
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path(
         "swagger/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"

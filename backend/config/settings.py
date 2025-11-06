@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     "djoser",
     "drf_spectacular",
     "django_structlog",
+    "django_filters",
     # Local apps
     "tenants",
     "users",
