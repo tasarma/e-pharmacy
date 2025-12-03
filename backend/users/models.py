@@ -66,13 +66,15 @@ class CustomUser(AbstractUser):
         return errors
 
 
-class UserProfile(TenantAwareModel):
-    """
-    Business data and application-specific user information.
-    """
+class UserProfile(models.Model):
+    """Business data and application-specific user information."""
 
     user = models.OneToOneField(
         CustomUser, on_delete=models.CASCADE, related_name="profile"
+    )
+
+    tenant = models.ForeignKey(
+        Tenant, on_delete=models.CASCADE, related_name="profiles"
     )
 
     # Contact Information

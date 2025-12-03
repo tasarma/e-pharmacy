@@ -12,23 +12,21 @@ User = get_user_model()
 @receiver(post_save, sender=User, dispatch_uid="create_user_profile")
 def create_user_profile(sender, instance, created, **kwargs):
     """Create UserProfile automatically when User is created"""
-    if not created or instance.is_superuser:
+    if not created:
         return
-
-    if not instance.tenant_id:
-        logger.warning(
-            "user_created_without_tenant",
-            user_id=str(instance.id),
-            email=instance.email
-        )
+    
+    # Skip superusers without tenant
+    if instance.is_superuser and not instance.tenant_id:
         return
-
+    
     from users.models import UserProfile
-
+    
     try:
-        # Superusers might not have tenant context
-        with tenant_context_disabled():
-            UserProfile.objects.create(user=instance, tenant=instance.tenant)
+        UserProfile.objects.create(
+            user=instance,
+            tenant=instance.tenant 
+        )
+        logger.info("user_profile_created", user_id=str(instance.id))
     except Exception as e:
         logger.error(
             "profile_creation_failed",

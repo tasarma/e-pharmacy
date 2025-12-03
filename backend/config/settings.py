@@ -238,3 +238,18 @@ structlog.configure(
     cache_logger_on_first_use=True,
 )
 os.makedirs(os.path.join(BASE_DIR, "logs"), exist_ok=True)
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'tenant-cache',
+        # TODO: set up REDIS in production
+        # 'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+        # 'LOCATION': 'redis://127.0.0.1:6379/1',
+        # 'OPTIONS': {
+        #     'db': 1,
+        #     'parser_class': 'redis.connection.PythonParser',
+        #     'pool_class': 'redis.BlockingConnectionPool',
+        # }
+    }
+}
