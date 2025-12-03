@@ -10,20 +10,26 @@ from .models import CustomUser
 class TenantAwareTokenObtainSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
         data = super().validate(attrs)
-        current_tenant = get_current_tenant()
+
+        try:
+            current_tenant = get_current_tenant()
+        except TenantError:
+            raise serializers.ValidationError("Authentication failed.")
 
         if self.user.tenant_id != current_tenant.id:
-            raise serializers.ValidationError(
-                f"user doesn't belong to tenant '{current_tenant.name}'."
-            )
+            raise serializers.ValidationError("Authentication failed.")
 
         return data
+
 
     @classmethod
     def get_token(cls, user):
         token = super().get_token(user)
-        if user.tenant:
-            token["tenant_subdomain"] = user.tenant.subdomain
+        if user.tenant_id:
+            token["tenant_id"] = str(user.tenant_id)
+            # Only add subdomain if needed by frontend
+            # if user.tenant:
+            #     token["tenant_subdomain"] = user.tenant.subdomain
         return token
 
 
@@ -41,12 +47,14 @@ class TenantAwareUserCreateSerializer(UserCreateSerializer):
 
         try:
             tenant = get_current_tenant()
-        except TenantError as exc:
-            raise serializers.ValidationError({"tenant": str(exc)})
-
-        if not tenant or not getattr(tenant, "active", True):
+        except TenantError:
             raise serializers.ValidationError(
-                {"tenant": "No active tenant in context."}
+                {"detail": "Tenant context required for registration."}
+            )
+
+        if not tenant.active:
+            raise serializers.ValidationError(
+                {"detail": "Registration not available."}
             )
 
         validated_data["tenant"] = tenant
