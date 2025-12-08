@@ -1,6 +1,7 @@
 from django.contrib.auth.base_user import BaseUserManager
 from django.core.validators import validate_email
 from django.utils.translation import gettext_lazy as _
+from django.core.exceptions import ValidationError
 
 
 class CustomUserManager(BaseUserManager):
@@ -8,7 +9,7 @@ class CustomUserManager(BaseUserManager):
     Custom user manager that uses email as the unique identifier
     and enforces tenant context for regular users.
     """
-    
+
     def create_user(self, email, password=None, **extra_fields):
         """Create and save a user with the given email and password."""
         if not email:

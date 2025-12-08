@@ -10,9 +10,17 @@ from .context import set_tenant_context, tenant_context_disabled
 
 logger = structlog.get_logger(__name__)
 
-SUBDOMAIN_PATTERN = re.compile(r'^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$', re.IGNORECASE)
-BYPASS_PATHS = ("/admin/", "/health/", "/metrics/")
+SUBDOMAIN_PATTERN = re.compile(r"^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$", re.IGNORECASE)
 TENANT_CACHE_TIMEOUT = 300  # 5 minutes
+PUBLIC_SUBDOMAINS = frozenset(["signup"])
+PUBLIC_PATHS = [
+    "/admin/",
+    "/api/tenants/onboard/",
+    # '/api/schema/',
+    # '/api/docs/',
+    "/health/",
+    "/favicon.ico",
+]
 
 
 class TenantAwareMiddleware:
@@ -29,7 +37,7 @@ class TenantAwareMiddleware:
         #     return self.get_response(request)
 
         # Bypass tenant enforcement for specific paths
-        if any(request.path.startswith(path) for path in BYPASS_PATHS):
+        if any(request.path.startswith(path) for path in PUBLIC_PATHS):
             with tenant_context_disabled():
                 return self.get_response(request)
 
@@ -42,9 +50,15 @@ class TenantAwareMiddleware:
             raise Http404("Invalid host")
 
         subdomain = self.get_subdomain(host)
-        if not subdomain:
+
+        if subdomain is None:
             logger.warning("no_subdomain_found", host=host)
             raise Http404("Tenant not found")
+
+        # Public subdomain - no tenant required
+        if subdomain in PUBLIC_SUBDOMAINS:
+            with tenant_context_disabled():
+                return self.get_response(request)
 
         tenant = self.get_tenant(subdomain)
 
@@ -58,7 +72,14 @@ class TenantAwareMiddleware:
         return response
 
     def get_subdomain(self, host: str) -> Optional[str]:
-        """Extract and validate subdomain from host header."""
+        """
+        Extract and validate subdomain from host header.
+
+        Examples:
+            tenantone.example.com -> 'tenantone'
+            example.com -> None
+            localhost:8000 -> None
+        """
         if not host:
             return None
 
@@ -68,13 +89,13 @@ class TenantAwareMiddleware:
 
         if len(parts) < 3:
             return None
-        
+
         subdomain = parts[0]
-        
+
         if not SUBDOMAIN_PATTERN.match(subdomain):
             logger.warning("invalid_subdomain_format", subdomain=subdomain)
             return None
-        
+
         return subdomain
 
     def get_tenant(self, subdomain: str) -> Optional[Tenant]:
@@ -87,13 +108,12 @@ class TenantAwareMiddleware:
 
         try:
             tenant = Tenant.objects.select_related().get(
-                subdomain=subdomain, 
-                active=True
+                subdomain=subdomain, active=True
             )
             cache.set(cache_key, tenant, timeout=TENANT_CACHE_TIMEOUT)
             logger.info("tenant_loaded", tenant_id=str(tenant.id))
             return tenant
-            
+
         except ObjectDoesNotExist:
             # Cache negative results to prevent DB hammering
             cache.set(cache_key, "NOT_FOUND", timeout=60)

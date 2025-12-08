@@ -28,7 +28,11 @@ SECRET_KEY = "django-insecure-%uualk)bx%m1wk3(965@lf^u58&mm%a*5gk@*vy+w__ss=y_gj
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", ".example.com"]
+ALLOWED_HOSTS = [
+    "localhost",
+    "127.0.0.1",
+    ".example.com",
+]
 
 
 # Application definition
@@ -130,6 +134,14 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 
+# For production - use cloud storage
+# DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+# AWS_STORAGE_BUCKET_NAME = 'your-bucket'
+# AWS_S3_REGION_NAME = 'us-east-1'
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
@@ -142,7 +154,6 @@ AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
 ]
 
-# put on your settings.py file below INSTALLED_APPS
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
     "DEFAULT_AUTHENTICATION_CLASSES": (
@@ -240,9 +251,9 @@ structlog.configure(
 os.makedirs(os.path.join(BASE_DIR, "logs"), exist_ok=True)
 
 CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'tenant-cache',
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "tenant-cache",
         # TODO: set up REDIS in production
         # 'BACKEND': 'django.core.cache.backends.redis.RedisCache',
         # 'LOCATION': 'redis://127.0.0.1:6379/1',

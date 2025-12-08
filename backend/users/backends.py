@@ -1,6 +1,9 @@
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AbstractBaseUser
+from django.http import HttpRequest
 from tenants.context import get_current_tenant
+from typing import Optional, Type, Any
 import logging
 
 logger = logging.getLogger(__name__)
@@ -12,10 +15,16 @@ class TenantAwareAuthBackend(ModelBackend):
     This ensures users can only log in to their assigned tenant.
     """
 
-    def authenticate(self, request, username=None, password=None, **kwargs):
-        UserModel = get_user_model()
+    def authenticate(
+        self,
+        request: HttpRequest,
+        username: Optional[str] = None,
+        password: Optional[str] = None,
+        **kwargs: Any,
+    ) -> Optional[AbstractBaseUser]:
+        UserModel: Type[AbstractBaseUser] = get_user_model()
 
-        email = kwargs.get(UserModel.USERNAME_FIELD) or username
+        email: Optional[str] = kwargs.get(UserModel.USERNAME_FIELD) or username
         if email is None or password is None:
             return None
 
@@ -25,7 +34,7 @@ class TenantAwareAuthBackend(ModelBackend):
                 logger.error("Authentication attempted without tenant context")
                 return None
 
-            user = UserModel.objects.get(email=email, tenant=tenant)
+            user: AbstractBaseUser = UserModel.objects.get(email=email, tenant=tenant)
 
         except UserModel.DoesNotExist:
             # Run the default password hasher once to reduce timing attacks
@@ -39,18 +48,18 @@ class TenantAwareAuthBackend(ModelBackend):
                 if not user.tenant.active:
                     logger.warning(
                         "Login blocked for inactive tenant",
-                        extra={"user_id": user.id, "tenant_id": tenant.id}
+                        extra={"user_id": user.id, "tenant_id": tenant.id},
                     )
                     return None
                 return user
 
         return None
 
-    def get_user(self, user_id):
+    def get_user(self, user_id: Any) -> Optional[AbstractBaseUser]:
         """
         Override to ensure we only retrieve users from the current tenant.
         """
-        UserModel = get_user_model()
+        UserModel: Type[AbstractBaseUser] = get_user_model()
         try:
             tenant = get_current_tenant()
             if tenant is None or not tenant.active:
