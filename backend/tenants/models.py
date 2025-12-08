@@ -13,6 +13,8 @@ from config.regex_validators import phone_validator
 
 logger = structlog.get_logger(__name__)
 
+logger = structlog.get_logger(__name__)
+
 TENANT_FIELD_NAME = "tenant"
 RESERVED_SUBDOMAINS = frozenset(
     {"www", "api", "admin", "app", "mail", "ftp", "localhost", "static", "media"}
@@ -48,6 +50,9 @@ class Tenant(models.Model):
 
     def __str__(self) -> str:
         return f"{self.name} ({self.subdomain})"
+    
+    def __repr__(self) -> str:
+        return f"<Tenant id={self.id} subdomain={self.subdomain} active={self.active}>"
 
     def __repr__(self) -> str:
         return f"<Tenant id={self.id} subdomain={self.subdomain} active={self.active}>"

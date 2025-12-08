@@ -23,6 +23,7 @@ class TenantAwareTokenObtainSerializer(TokenObtainPairSerializer):
 
         return data
 
+
     @classmethod
     def get_token(
         cls: Type["TenantAwareTokenObtainSerializer"], user: CustomUser

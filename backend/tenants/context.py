@@ -12,6 +12,8 @@ from .exceptions import TenantError
 logger = structlog.get_logger(__name__)
 state: ContextVar[Optional[Dict[str, Any]]] = ContextVar("tenant-state", default=None)
 
+logger = structlog.get_logger(__name__)
+state: ContextVar[Optional[Dict[str, Any]]] = ContextVar("tenant-state", default=None)
 
 def get_state() -> Dict[str, Any]:
     """

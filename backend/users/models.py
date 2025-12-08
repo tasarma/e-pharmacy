@@ -1,6 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from django.core.validators import RegexValidator
 import uuid
 from typing import Any
 from django.core.checks import Error
@@ -14,6 +15,10 @@ from config.regex_validators import phone_validator
 
 ERROR_AUTH_EO33 = "auth.E003"
 
+phone_regex = RegexValidator(
+    regex=r'^\+?1?\d{9,15}$',
+    message=_("Phone number must be entered in the format: '+999999999'. Up to 15 digits allowed.")
+)
 
 class CustomUser(AbstractUser):
     """
