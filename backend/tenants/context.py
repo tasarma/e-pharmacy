@@ -12,6 +12,7 @@ from .exceptions import TenantError
 logger = structlog.get_logger(__name__)
 state: ContextVar[Optional[Dict[str, Any]]] = ContextVar("tenant-state", default=None)
 
+
 def get_state() -> Dict[str, Any]:
     """
     Get the current tenant context state.
@@ -23,7 +24,7 @@ def get_state() -> Dict[str, Any]:
 def get_current_tenant() -> Optional["Tenant"]:
     """
     Return current tenant if enforcement enabled.
-    
+
     Raises:
         TenantError: if enforcement enabled but no tenant set.
     """
