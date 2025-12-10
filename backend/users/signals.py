@@ -24,7 +24,7 @@ def create_user_profile(
     from users.models import UserProfile
 
     try:
-        UserProfile.objects.create(user=instance, tenant=instance.tenant)
+        UserProfile.objects.create(user=instance)
         logger.info("user_profile_created", user_id=str(instance.id))
     except Exception as e:
         logger.error("profile_creation_failed", user_id=str(instance.id), error=str(e))

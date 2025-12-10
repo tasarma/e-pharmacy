@@ -6,10 +6,9 @@ import uuid
 from typing import Any
 from django.core.checks import Error
 
-from tenants.models import Tenant, UniqueTenantConstraint
-from users.managers import CustomUserManager
+from tenants.models import Tenant, TenantAwareModel, UniqueTenantConstraint
+from users.managers import CustomUserManager, TenantAwareUserManager
 
-# from ..regex_validators import phone_validator
 from config.regex_validators import phone_validator
 
 
@@ -52,7 +51,8 @@ class CustomUser(AbstractUser):
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
 
-    objects = CustomUserManager()
+    objects = TenantAwareUserManager()  # Filters by tenant
+    all_objects = CustomUserManager()   # For admin/superuser use
 
     class Meta:
         constraints = [
@@ -78,15 +78,11 @@ class CustomUser(AbstractUser):
         return errors
 
 
-class UserProfile(models.Model):
+class UserProfile(TenantAwareModel):
     """Business data and application-specific user information."""
 
     user = models.OneToOneField(
         CustomUser, on_delete=models.CASCADE, related_name="profile"
-    )
-
-    tenant = models.ForeignKey(
-        Tenant, on_delete=models.CASCADE, related_name="profiles"
     )
 
     # Contact Information
@@ -94,9 +90,6 @@ class UserProfile(models.Model):
         max_length=20, blank=True, validators=[phone_validator]
     )
 
-    # Personal Details
-    # first_name = models.CharField(max_length=150, blank=True)
-    # last_name = models.CharField(max_length=150, blank=True)
     date_of_birth = models.DateField(null=True, blank=True)
     address = models.TextField(blank=True, null=True)
     gln_number = models.CharField(max_length=13, blank=True, null=True)
