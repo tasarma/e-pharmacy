@@ -8,7 +8,7 @@ from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.throttling import AnonRateThrottle
 from drf_spectacular.utils import extend_schema
 import structlog
-from typing import Any
+from typing import Any, Dict
 
 from django.db.models import QuerySet
 
@@ -20,24 +20,18 @@ from .permissions import IsTenantManager
 logger = structlog.get_logger(__name__)
 
 
-class TenantSettingsViewSet(viewsets.ModelViewSet):
+class TenantSettingsView(APIView):
     """
-    Manage tenant settings and configuration.
+    Singleton tenant settings manager. 
+    Each tenant has exactly one settings object.
     Only accessible by superadmin and tenant manager.
     """
 
     serializer_class = TenantSettingsSerializer
     permission_classes = [IsAuthenticated, IsTenantManager]
     parser_classes = [MultiPartParser, FormParser, JSONParser]
-    http_method_names = ["get", "put", "patch"]  # No POST/DELETE
-
-    def get_queryset(self) -> QuerySet[TenantSettings]:
-        """Return settings for current tenant only."""
-        tenant = get_current_tenant()
-        return TenantSettings.objects.filter(tenant=tenant)
 
     def get_object(self) -> TenantSettings:
-        """Get or create settings for current tenant."""
         tenant = get_current_tenant()
         settings, created = TenantSettings.objects.get_or_create(
             tenant=tenant,
@@ -52,53 +46,60 @@ class TenantSettingsViewSet(viewsets.ModelViewSet):
 
         return settings
 
+    def get_serializer(self, *args: Any, **kwargs: Any) -> TenantSettingsSerializer:
+        kwargs.setdefault("context", {"request": self.request})
+        return self.serializer_class(*args, **kwargs)
+
+    def _save(self, instance: TenantSettings, data: Dict[str, Any], partial: bool) -> Dict[str, Any]:
+        serializer = self.get_serializer(instance, data=data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        logger.info(
+            "tenant_settings_updated",
+            tenant_id=str(instance.tenant.id),
+            updated_fields=list(data.keys()),
+        )
+
+        return serializer.data
+
     @extend_schema(
         responses={200: TenantSettingsSerializer},
         description="Get current tenant settings",
     )
-    def retrieve(self, request: Request, *args: Any, **kwargs: Any) -> Response:
-        """Get tenant settings."""
+    def get(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         instance: TenantSettings = self.get_object()
-        serializer = self.get_serializer(instance, context={"request": request})
+        serializer = self.get_serializer(instance)
         return Response(serializer.data)
 
     @extend_schema(
         request=TenantSettingsSerializer,
         responses={200: TenantSettingsSerializer},
-        description="Update tenant settings",
+        description="Fully update tenant settings",
     )
-    def update(self, request: Request, *args: Any, **kwargs: Any) -> Response:
-        """Full update of tenant settings."""
+    def put(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         partial: bool = kwargs.pop("partial", False)
         instance: TenantSettings = self.get_object()
-        serializer = self.get_serializer(
-            instance, data=request.data, partial=partial, context={"request": request}
+        data = self._save(
+            instance, data=request.data, partial=partial #, context={"request": request}
         )
-        serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
-
-        logger.info(
-            "tenant_settings_updated",
-            tenant_id=str(instance.tenant.id),
-            updated_fields=list(request.data.keys()),
-        )
-
-        return Response(serializer.data)
+        
+        return Response(data)
 
     @extend_schema(
         request=TenantSettingsSerializer,
         responses={200: TenantSettingsSerializer},
         description="Partial update of tenant settings",
     )
-    def partial_update(self, request: Request, *args: Any, **kwargs: Any) -> Response:
-        """Partial update of tenant settings."""
+    def patch(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         kwargs["partial"] = True
-        return self.update(request, *args, **kwargs)
+        instance: TenantSettings = self.get_object()
+        data = self._save(instance, request.data, partial=True)
+        return Response(data)
 
-    @action(detail=False, methods=["delete"], url_path="logo")
+    @extend_schema(description="Delete tenant store logo.")
     def delete_logo(self, request: Request) -> Response:
-        """Remove store logo."""
-        settings: TenantSettings = self.get_object()
+        instance: TenantSettings = self.get_object()
 
         if settings.store_logo:
             settings.store_logo.delete(save=True)
