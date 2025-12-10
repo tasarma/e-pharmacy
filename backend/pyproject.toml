@@ -17,5 +17,30 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "factory-boy>=3.3.3",
+    "faker>=38.2.0",
     "pre-commit>=4.2.0",
+    "pytest-cov>=7.0.0",
+    "pytest-django>=4.11.1",
+]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings"
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--strict-markers",
+    "--strict-config",
+    # "--cov=tenants",
+    # "--cov-report=term-missing:skip-covered",
+    # "--cov-report=html",
+    # "--cov-fail-under=80",
+    "-v"
+]
+testpaths = ["tests"]
+markers = [
+    "unit: Unit tests",
+    "integration: Integration tests",
+    "slow: Slow running tests"
 ]
