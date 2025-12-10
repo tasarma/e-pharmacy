@@ -2,7 +2,7 @@ from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractBaseUser
 from django.http import HttpRequest
-from tenants.context import get_current_tenant
+from tenants.context import get_current_tenant, get_state
 from typing import Optional, Type, Any
 import logging
 
@@ -34,7 +34,7 @@ class TenantAwareAuthBackend(ModelBackend):
                 logger.error("Authentication attempted without tenant context")
                 return None
 
-            user: AbstractBaseUser = UserModel.objects.get(email=email, tenant=tenant)
+            user: AbstractBaseUser = UserModel.all_objects.get(email=email, tenant=tenant)
 
         except UserModel.DoesNotExist:
             # Run the default password hasher once to reduce timing attacks
@@ -61,9 +61,14 @@ class TenantAwareAuthBackend(ModelBackend):
         """
         UserModel: Type[AbstractBaseUser] = get_user_model()
         try:
+            state = get_state()
+            if not state.get("enabled", True):
+                # In disabled context (admin), use all_objects
+                return UserModel.all_objects.get(pk=user_id)
+
             tenant = get_current_tenant()
             if tenant is None or not tenant.active:
                 return None
-            return UserModel.objects.get(pk=user_id, tenant=tenant)
+            return UserModel.all_objects.get(pk=user_id, tenant=tenant)
         except UserModel.DoesNotExist:
             return None

@@ -28,7 +28,7 @@ class Tenant(models.Model):
     name = models.CharField(max_length=100)
     subdomain = models.CharField(max_length=60, unique=True, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    active = models.BooleanField(default=True, db_index=True)
+    active = models.BooleanField(default=False, db_index=True)
 
     class Meta:
         indexes = [
