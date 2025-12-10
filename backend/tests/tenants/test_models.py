@@ -1,172 +1,158 @@
-from django.test import TestCase
-from users.models import CustomUser as User
+import pytest
 from django.core.exceptions import ValidationError
-from django.db import IntegrityError
-from unittest.mock import patch
-
-from tenants.models import Tenant
-from tests.models import TestOrder as TestProduct
+from tenants.models import Tenant, TenantSettings
+from tenants.context import set_tenant_context, tenant_context_disabled
 
 
-class TestTenantModel(TestCase):
-    def setUp(self):
-        # Arrange
-        self.user = User.objects.create_user(email="test@gmail.com", password="123")
+@pytest.mark.django_db
+class TestTenantModel:
+    """Test Tenant model validation and behavior."""
+    
+    def test_create_valid_tenant(self):
+        """Test creating tenant with valid data."""
+        with tenant_context_disabled():
+            tenant = Tenant.objects.create(
+                name="Valid Pharmacy",
+                subdomain="validpharm"
+            )
+        
+        assert tenant.id is not None
+        assert tenant.active is False
+        assert str(tenant) == "Valid Pharmacy (validpharm)"
+    
+    def test_subdomain_validation_invalid_chars(self):
+        """Test subdomain rejects invalid characters."""
+        with tenant_context_disabled():
+            tenant = Tenant(
+                name="Test",
+                subdomain="test_invalid!"
+            )
 
-    def test_tenant_can_be_created_with_required_fields(self):
-        # Act
-        tenant = Tenant.objects.create(
-            name="Alice's Shop",
-            subdomain="alice",
-            active=True,
-        )
+            with pytest.raises(ValidationError) as exc:
+                tenant.full_clean()
 
-        # Assert
-        self.assertEqual(tenant.name, "Alice's Shop")
-        self.assertEqual(tenant.subdomain, "alice")
-        self.assertTrue(tenant.active)
-        self.assertIsNotNone(tenant.created_at)
+            assert "subdomain" in str(exc.value).lower()
 
-    def test_tenant_subdomain_must_be_unique(self):
-        # Act
-        Tenant.objects.create(name="Alice's Shop", subdomain="alice")
+    def test_subdomain_reserved_keywords(self):
+        """Test subdomain rejects reserved keywords."""
+        with tenant_context_disabled():
+            tenant = Tenant(
+                name="Admin Store",
+                subdomain="admin"
+            )
 
-        # Assert
-        with self.assertRaises(ValidationError):
-            duplicate_tenant = Tenant(name="Another Shop", subdomain="alice")
-            duplicate_tenant.full_clean()  # This triggers model validation
+            with pytest.raises(ValidationError) as exc:
+                tenant.save()
 
+            assert "reserved" in str(exc.value).lower()
 
-class TestTenantManager(TestCase):
-    def setUp(self):
-        self.tenant1 = Tenant.objects.create(
-            name="Tenant 1",
-            subdomain="tenant1",
-        )
-        self.tenant2 = Tenant.objects.create(
-            name="Tenant 2",
-            subdomain="tenant2",
-        )
+    def test_subdomain_uniqueness(self, tenant):
+        """Test subdomain must be unique."""
+        with tenant_context_disabled():
+            duplicate = Tenant(
+                name="Duplicate",
+                subdomain=tenant.subdomain
+            )
 
-    @patch("tenants.models.get_current_tenant")
-    def test_bulk_create_sets_tenant_on_objects(self, mock_get_current_tenant):
-        # Arrange
-        mock_get_current_tenant.return_value = self.tenant1
-
-        products = [
-            TestProduct(name="Bulk Product 1"),
-            TestProduct(name="Bulk Product 2"),
-            TestProduct(name="Bulk Product 3"),
-        ]
-
-        # Act
-        TestProduct.objects.bulk_create(products)
-
-        # Assert
-        for product in products:
-            self.assertEqual(product.tenant, self.tenant1)
-
-    @patch("tenants.models.get_current_tenant")
-    @patch("tenants.models.get_state")
-    def test_get_queryset_filters_by_current_tenant_when_enabled(
-        self, mock_get_state, mock_get_current_tenant
-    ):
-        # Arrange
-        mock_get_state.return_value = {"enabled": True}
-        mock_get_current_tenant.return_value = self.tenant1
-
-        with patch("tenants.models.get_current_tenant", return_value=self.tenant1):
-            _product1 = TestProduct.objects.create(name="Tenant 1 Product")
-
-        with patch("tenants.models.get_current_tenant", return_value=self.tenant2):
-            _product2 = TestProduct.objects.create(name="Tenant 2 Product")
-
-        # Act
-        queryset = TestProduct.objects.all()
-
-        # Assert
-        # Note: We can't easily test the actual filtering since CurrentTenant expression
-        # requires database execution, but we can verify the manager applies the filter
-        self.assertTrue(hasattr(queryset, "query"))
-        # The queryset should have the tenant filter applied
-        filter_found = any(
-            "tenant" in str(child) for child in queryset.query.where.children
-        )
-        self.assertTrue(
-            filter_found, "Expected tenant filter to be applied to queryset"
-        )
+            with pytest.raises(ValidationError):
+                duplicate.full_clean()
 
 
-class TestTenantAwareAbstract(TestCase):
-    def setUp(self):
-        self.tenant = Tenant.objects.create(
-            name="Test Tenant",
-            subdomain="test",
-        )
+@pytest.mark.django_db
+class TestTenantSettings:
+    """Test TenantSettings model."""
+    
+    def test_create_settings(self, tenant):
+        """Test creating tenant settings."""
+        with set_tenant_context(tenant=tenant):
+            settings = TenantSettings.objects.create(
+                tenant=tenant,
+                store_name="My Store",
+                email="store@example.com"
+            )
+        
+        assert settings.tenant == tenant
+        assert settings.store_name == "My Store"
+    
+    def test_settings_one_to_one(self, tenant):
+        """Test only one settings per tenant."""
+        with set_tenant_context(tenant=tenant):
+            TenantSettings.objects.create(
+                tenant=tenant,
+                store_name="Store 1",
+                email="store1@example.com"
+            )
 
-    @patch("tenants.models.get_current_tenant")
-    def test_save_sets_current_tenant(self, mock_get_current_tenant):
-        # Arrange
-        mock_get_current_tenant.return_value = self.tenant
-        product = TestProduct(name="Test Product")
+            # Attempt to create duplicate
+            with pytest.raises(Exception):
+                TenantSettings.objects.create(
+                    tenant=tenant,
+                    store_name="Store 2",
+                    email="store2@example.com"
+                )
 
-        # Act
-        product.save()
+    def test_full_address(self, tenant_settings):
+        """Test full address formatting."""
+        tenant_settings.address_line1 = "123 Main St"
+        tenant_settings.city = "Boston"
+        tenant_settings.state_province = "MA"
+        tenant_settings.postal_code = "02101"
+        tenant_settings.country = "USA"
+        tenant_settings.save()
 
-        # Assert
-        self.assertEqual(product.tenant, self.tenant)
-        mock_get_current_tenant.assert_called_once()
-
-    def test_get_tenant_instance_returns_tenant(self):
-        # Arrange
-        with patch("tenants.models.get_current_tenant", return_value=self.tenant):
-            product = TestProduct.objects.create(name="Test Product")
-
-        # Act
-        tenant_instance = product.get_tenant_instance()
-
-        # Assert
-        self.assertEqual(tenant_instance, self.tenant)
-
-    def test_get_tenant_instance_returns_none_when_no_tenant(self):
-        # Arrange
-        product = TestProduct(name="Test Product")
-
-        # Act
-        tenant_instance = product.get_tenant_instance()
-
-        # Assert
-        self.assertIsNone(tenant_instance)
+        address = tenant_settings.get_full_address()
+        assert "123 Main St" in address
+        assert "Boston" in address
+        assert "MA" in address
 
 
-class TestTenantAwareModel(TestCase):
-    def setUp(self):
-        self.tenant = Tenant.objects.create(name="Test Tenant", subdomain="test")
+@pytest.mark.django_db
+class TestTenantIsolation:
+    """Test tenant data isolation."""
+    
+    def test_users_isolated_by_tenant(self, manager, other_tenant_user):
+        """Test users from different tenants are isolated."""
+        with set_tenant_context(tenant=manager.tenant):
+            from django.contrib.auth import get_user_model
+            User = get_user_model()
+            
+            # Should only see users from current tenant
+            users = User.objects.all()
+            assert manager in users
+            assert other_tenant_user not in users
 
-    def test_product_belongs_to_current_tenant_when_created(self):
-        # Arrange
-        with patch("tenants.models.get_current_tenant", return_value=self.tenant):
-            # Act
-            product = TestProduct.objects.create(name="Test Product")
+    def test_all_objects_bypasses_tenant_filter(self, manager, other_tenant_user):
+        """Test all_objects manager sees all users."""
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        
+        with set_tenant_context(tenant=manager.tenant):
+            # all_objects should bypass tenant filtering
+            all_users = User.all_objects.all()
+            assert manager in all_users
+            assert other_tenant_user in all_users
 
-            # Assert
-            self.assertEqual(product.tenant, self.tenant)
-
-    def test_product_creation_fails_when_no_current_tenant(self):
-        # Arrange
-        with patch("tenants.models.get_current_tenant", return_value=None):
-            # Act & Assert
-            with self.assertRaises((IntegrityError, AttributeError)):
-                TestProduct.objects.create(name="Test Product")
-
-    def test_bulk_created_products_all_belong_to_current_tenant(self):
-        # Arrange
-        products = [TestProduct(name=f"Product {i}") for i in range(3)]
-
-        with patch("tenants.models.get_current_tenant", return_value=self.tenant):
-            # Act
-            created_products = TestProduct.objects.bulk_create(products)
-
-            # Assert
-            for product in created_products:
-                self.assertEqual(product.tenant, self.tenant)
+    def test_cannot_access_other_tenant_data(self, tenant, other_tenant):
+        """Test cannot access data from different tenant."""
+        from users.models import UserProfile
+        
+        # Create profile in first tenant
+        with set_tenant_context(tenant=tenant):
+            from django.contrib.auth import get_user_model
+            User = get_user_model()
+            
+            user1 = User.objects.create_user(
+                email="test1@example.com",
+                password="test123",
+                first_name="John",
+                tenant=tenant
+            )
+            profile1 = UserProfile.objects.get(
+                user=user1
+            )
+        
+        # Try to access from second tenant
+        with set_tenant_context(tenant=other_tenant):
+            profiles = UserProfile.objects.all()
+            assert profile1 not in profiles
+            assert not profiles.filter(id=profile1.id).exists()
