@@ -34,7 +34,9 @@ class TenantAwareAuthBackend(ModelBackend):
                 logger.error("Authentication attempted without tenant context")
                 return None
 
-            user: AbstractBaseUser = UserModel.all_objects.get(email=email, tenant=tenant)
+            user: AbstractBaseUser = UserModel.all_objects.get(
+                email=email, tenant=tenant
+            )
 
         except UserModel.DoesNotExist:
             # Run the default password hasher once to reduce timing attacks

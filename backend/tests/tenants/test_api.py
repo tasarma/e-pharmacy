@@ -1,5 +1,4 @@
 import pytest
-from unittest.mock import patch
 from rest_framework.test import APIClient
 
 
@@ -15,13 +14,12 @@ class TestTenantSettingsAPI:
         client.force_authenticate(user=manager)
 
         host = f"{manager.tenant.subdomain}.example.com"
-        from tenants.context import set_tenant_context
 
-        with set_tenant_context(tenant=manager.tenant):
-            response = client.get(
-                "/api/tenants/settings/",
-                HTTP_HOST=host,
-            )
+        # with set_tenant_context(tenant=manager.tenant):
+        response = client.get(
+            "/api/tenants/settings/",
+            HTTP_HOST=host,
+        )
 
         assert response.status_code == 200
         assert "store_name" in response.data
@@ -31,14 +29,13 @@ class TestTenantSettingsAPI:
         client.force_authenticate(user=regular_user)
 
         host = f"{regular_user.tenant.subdomain}.example.com"
-        from tenants.context import set_tenant_context
 
-        with set_tenant_context(tenant=regular_user.tenant):
-            response = client.patch(
-                "/api/tenants/settings/",     # still required
-                {"store_name": "Unauthorized"},
-                format="json",
-                HTTP_HOST=host,
-            )
+        # with set_tenant_context(tenant=regular_user.tenant):
+        response = client.patch(
+            "/api/tenants/settings/",
+            {"store_name": "Unauthorized"},
+            format="json",
+            HTTP_HOST=host,
+        )
 
         assert response.status_code == 403

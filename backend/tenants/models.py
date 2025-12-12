@@ -50,9 +50,6 @@ class Tenant(models.Model):
 
     def __str__(self) -> str:
         return f"{self.name} ({self.subdomain})"
-    
-    def __repr__(self) -> str:
-        return f"<Tenant id={self.id} subdomain={self.subdomain} active={self.active}>"
 
     def __repr__(self) -> str:
         return f"<Tenant id={self.id} subdomain={self.subdomain} active={self.active}>"

@@ -12,9 +12,7 @@ def tenant():
     """Create a test tenant."""
     with tenant_context_disabled():
         tenant = Tenant.objects.create(
-            name="Test Pharmacy",
-            subdomain="testpharm",
-            active=True
+            name="Test Pharmacy", subdomain="testpharm", active=True
         )
     return tenant
 
@@ -24,9 +22,7 @@ def inactive_tenant():
     """Create an inactive tenant."""
     with tenant_context_disabled():
         tenant = Tenant.objects.create(
-            name="Inactive Pharmacy",
-            subdomain="inactive",
-            active=False
+            name="Inactive Pharmacy", subdomain="inactive", active=False
         )
     return tenant
 
@@ -38,10 +34,10 @@ def tenant_settings(tenant):
         settings, created = TenantSettings.objects.get_or_create(
             tenant=tenant,
             defaults={
-                'store_name': "Test Pharmacy Store",
-                'email': "test@testpharm.com",
-                'phone_number': "+1234567890"
-            }
+                "store_name": "Test Pharmacy Store",
+                "email": "test@testpharm.com",
+                "phone_number": "+1234567890",
+            },
         )
     return settings
 
@@ -55,7 +51,7 @@ def manager(tenant):
             password="TestPass123!",
             role="manager",
             is_staff=True,
-            tenant=tenant
+            tenant=tenant,
         )
     return user
 
@@ -68,7 +64,7 @@ def regular_user(tenant):
             email="user@testpharm.com",
             password="TestPass123!",
             role="user",
-            tenant=tenant
+            tenant=tenant,
         )
     return user
 
@@ -78,9 +74,7 @@ def other_tenant():
     """Create second tenant for isolation tests."""
     with tenant_context_disabled():
         tenant = Tenant.objects.create(
-            name="Other Pharmacy",
-            subdomain="otherpharm",
-            active=True
+            name="Other Pharmacy", subdomain="otherpharm", active=True
         )
     return tenant
 
@@ -93,6 +87,14 @@ def other_tenant_user(other_tenant):
             email="user@otherpharm.com",
             password="TestPass123!",
             role="user",
-            tenant=other_tenant
+            tenant=other_tenant,
         )
     return user
+
+
+@pytest.fixture
+def client():
+    """Return DRF API client."""
+    from rest_framework.test import APIClient
+
+    return APIClient()

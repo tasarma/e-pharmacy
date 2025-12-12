@@ -15,9 +15,12 @@ from config.regex_validators import phone_validator
 ERROR_AUTH_EO33 = "auth.E003"
 
 phone_regex = RegexValidator(
-    regex=r'^\+?1?\d{9,15}$',
-    message=_("Phone number must be entered in the format: '+999999999'. Up to 15 digits allowed.")
+    regex=r"^\+?1?\d{9,15}$",
+    message=_(
+        "Phone number must be entered in the format: '+999999999'. Up to 15 digits allowed."
+    ),
 )
+
 
 class CustomUser(AbstractUser):
     """
@@ -52,7 +55,7 @@ class CustomUser(AbstractUser):
     REQUIRED_FIELDS = []
 
     objects = TenantAwareUserManager()  # Filters by tenant
-    all_objects = CustomUserManager()   # For admin/superuser use
+    all_objects = CustomUserManager()  # For admin/superuser use
 
     class Meta:
         constraints = [
