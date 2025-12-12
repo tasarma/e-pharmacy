@@ -10,20 +10,16 @@ class TestTenantPermissions:
 
     @pytest.mark.parametrize(
         "user,expected",
-        [
-            ("manager", True),
-            ("regular_user", False),
-            ("anonymous", False)
-        ]
+        [("manager", True), ("regular_user", False), ("anonymous", False)],
     )
     def test_tenant_permission(self, user, expected, manager, regular_user):
         factory = APIRequestFactory()
-        request = factory.get('/')
+        request = factory.get("/")
 
         request.user = {
             "manager": manager,
             "regular_user": regular_user,
-            "anonymous": AnonymousUser()
+            "anonymous": AnonymousUser(),
         }[user]
 
         permission = IsTenantManager()

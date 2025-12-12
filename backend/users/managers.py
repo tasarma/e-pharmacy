@@ -50,7 +50,7 @@ class TenantAwareUserManager(CustomUserManager):
     Manager that automatically filters users by current tenant.
     Used as default manager for CustomUser.
     """
-    
+
     def get_queryset(self):
         """Filter by current tenant when enabled."""
         state = get_state()
@@ -60,21 +60,25 @@ class TenantAwareUserManager(CustomUserManager):
             return base_queryset
 
         # Cache field lookup
-        if not hasattr(self, '_tenant_field_cache'):
-            self._tenant_field_cache = self.model._meta.get_field(TENANT_FIELD_NAME).target_field
+        if not hasattr(self, "_tenant_field_cache"):
+            self._tenant_field_cache = self.model._meta.get_field(
+                TENANT_FIELD_NAME
+            ).target_field
 
-        filter_kwargs = {TENANT_FIELD_NAME: CurrentTenant(output_field=self._tenant_field_cache)}
+        filter_kwargs = {
+            TENANT_FIELD_NAME: CurrentTenant(output_field=self._tenant_field_cache)
+        }
         return base_queryset.filter(**filter_kwargs)
-    
+
     def create_user(self, email, password=None, **extra_fields):
         """Override to set tenant on user creation."""
         # If tenant not explicitly set and context enabled
-        if 'tenant' not in extra_fields:
+        if "tenant" not in extra_fields:
             try:
                 state = get_state()
                 if state.get("enabled", True):
-                    extra_fields['tenant'] = get_current_tenant()
+                    extra_fields["tenant"] = get_current_tenant()
             except Exception:
                 pass  # Allow creation without tenant in disabled context
-        
+
         return super().create_user(email, password, **extra_fields)

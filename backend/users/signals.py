@@ -22,9 +22,14 @@ def create_user_profile(
         return
 
     from users.models import UserProfile
+    from tenants.context import get_current_tenant
 
     try:
-        UserProfile.objects.create(user=instance)
+        current_tenant = get_current_tenant()
+        if not current_tenant:
+            current_tenant = instance.tenant
+
+        UserProfile.objects.create(user=instance, tenant=current_tenant)
         logger.info("user_profile_created", user_id=str(instance.id))
     except Exception as e:
         logger.error("profile_creation_failed", user_id=str(instance.id), error=str(e))

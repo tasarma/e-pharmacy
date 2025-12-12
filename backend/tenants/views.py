@@ -1,6 +1,5 @@
-from rest_framework import status, viewsets
+from rest_framework import status
 from rest_framework.views import APIView
-from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.request import Request
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -10,7 +9,6 @@ from drf_spectacular.utils import extend_schema
 import structlog
 from typing import Any, Dict
 
-from django.db.models import QuerySet
 
 from .models import TenantSettings
 from .serializers import TenantSettingsSerializer, TenantOnboardingSerializer
@@ -22,7 +20,7 @@ logger = structlog.get_logger(__name__)
 
 class TenantSettingsView(APIView):
     """
-    Singleton tenant settings manager. 
+    Singleton tenant settings manager.
     Each tenant has exactly one settings object.
     Only accessible by superadmin and tenant manager.
     """
@@ -50,7 +48,9 @@ class TenantSettingsView(APIView):
         kwargs.setdefault("context", {"request": self.request})
         return self.serializer_class(*args, **kwargs)
 
-    def _save(self, instance: TenantSettings, data: Dict[str, Any], partial: bool) -> Dict[str, Any]:
+    def _save(
+        self, instance: TenantSettings, data: Dict[str, Any], partial: bool
+    ) -> Dict[str, Any]:
         serializer = self.get_serializer(instance, data=data, partial=partial)
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -81,9 +81,11 @@ class TenantSettingsView(APIView):
         partial: bool = kwargs.pop("partial", False)
         instance: TenantSettings = self.get_object()
         data = self._save(
-            instance, data=request.data, partial=partial #, context={"request": request}
+            instance,
+            data=request.data,
+            partial=partial,  # , context={"request": request}
         )
-        
+
         return Response(data)
 
     @extend_schema(
@@ -99,7 +101,7 @@ class TenantSettingsView(APIView):
 
     @extend_schema(description="Delete tenant store logo.")
     def delete_logo(self, request: Request) -> Response:
-        instance: TenantSettings = self.get_object()
+        settings: TenantSettings = self.get_object()
 
         if settings.store_logo:
             settings.store_logo.delete(save=True)

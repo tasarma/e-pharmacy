@@ -1,8 +1,8 @@
 from celery import shared_task
+from celery.app.task import Task
 import structlog
 
 logger = structlog.get_logger(__name__)
-from celery.app.task import Task
 
 
 @shared_task(bind=True, max_retries=3)
