@@ -61,7 +61,7 @@ def regular_user(tenant):
     """Create regular user for tenant."""
     with set_tenant_context(tenant=tenant):
         user = User.objects.create_user(
-            email="user@testpharm.com",
+            email="user@gmail.com",
             password="TestPass123!",
             role="user",
             tenant=tenant,
@@ -84,7 +84,7 @@ def other_tenant_user(other_tenant):
     """Create user in different tenant."""
     with set_tenant_context(tenant=other_tenant):
         user = User.objects.create_user(
-            email="user@otherpharm.com",
+            email="user@gmail.com",
             password="TestPass123!",
             role="user",
             tenant=other_tenant,

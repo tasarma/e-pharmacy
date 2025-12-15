@@ -28,7 +28,7 @@ repos:
     # Backend Django tests
     - id: django-tests
       name: Django Tests (backend)
-      entry: bash -c "cd backend && make tests"
+      entry: bash -c "cd backend && make test-fast"
       language: system
       pass_filenames: false
       stages: [pre-commit, pre-push]

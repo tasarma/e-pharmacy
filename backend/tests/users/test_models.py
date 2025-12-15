@@ -7,7 +7,7 @@ from tenants.context import set_tenant_context, tenant_context_disabled
 User = get_user_model()
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True)
 class TestCustomUserModel:
     """Test CustomUser model."""
 
@@ -98,7 +98,7 @@ class TestCustomUserModel:
         assert user.role == "user"
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True)
 class TestUserProfile:
     """Test UserProfile model."""
 
@@ -172,7 +172,7 @@ class TestUserProfile:
             assert not UserProfile.objects.filter(id=profile_id).exists()
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True)
 class TestUserManager:
     """Test TenantAwareUserManager."""
 
@@ -219,7 +219,7 @@ class TestUserManager:
             assert user.tenant == other_tenant
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True)
 class TestUserConstraints:
     """Test user model constraints."""
 
