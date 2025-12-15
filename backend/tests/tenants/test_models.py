@@ -4,7 +4,7 @@ from tenants.models import Tenant, TenantSettings
 from tenants.context import set_tenant_context, tenant_context_disabled
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True)
 class TestTenantModel:
     """Test Tenant model validation and behavior."""
 
@@ -48,7 +48,7 @@ class TestTenantModel:
                 duplicate.full_clean()
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True)
 class TestTenantSettings:
     """Test TenantSettings model."""
 
@@ -90,7 +90,7 @@ class TestTenantSettings:
         assert "MA" in address
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True)
 class TestTenantIsolation:
     """Test tenant data isolation."""
 

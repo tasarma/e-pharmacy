@@ -4,7 +4,7 @@ from rest_framework.test import APIRequestFactory
 from tenants.permissions import IsTenantManager
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True)
 class TestTenantPermissions:
     """Test tenant permission classes using parameterization."""
 

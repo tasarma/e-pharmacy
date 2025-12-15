@@ -6,7 +6,7 @@ from tenants.models import Tenant, TenantSettings
 User = get_user_model()
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True)
 class TestTenantOnboarding:
     """Test tenant onboarding service."""
 
