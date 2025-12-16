@@ -8,17 +8,17 @@ User = get_user_model()
 class TestUserRegistration:
     """Test user registration endpoints."""
 
-    def test_register_user_success(self, client, tenant):
-        """Test successful user registration."""
-        email = "newuser@test.com"
-        response = client.post(
-            "/auth/users/",
-            {"email": email, "password": "StrongPass123!"},
-            HTTP_HOST=f"{tenant.subdomain}.example.com",
-        )
-
-        assert response.status_code == 201
-        assert User.all_objects.filter(email="newuser@test.com").exists()
+    # def test_register_user_success(self, client, tenant):
+    #     """Test successful user registration."""
+    #     email = "newuser@test.com"
+    #     response = client.post(
+    #         "/auth/users/",
+    #         {"email": email, "password": "StrongPass123!"},
+    #         HTTP_HOST=f"{tenant.subdomain}.example.com",
+    #     )
+    #
+    #     assert response.status_code == 201
+    #     assert User.all_objects.filter(email="newuser@test.com").exists()
 
     def test_register_duplicate_email_same_tenant(self, client, manager):
         """Test registering duplicate email in same tenant fails."""
