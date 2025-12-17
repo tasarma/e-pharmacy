@@ -1,4 +1,3 @@
-from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 
@@ -7,5 +6,3 @@ from rest_framework.decorators import api_view
 def get_products(request) -> Response:
     data = {"products": "None"}
     return Response(data)
-
-
