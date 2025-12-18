@@ -41,7 +41,8 @@ class TestUserRegistration:
         assert response.status_code == 400
 
 
-@pytest.mark.django_db(transaction=True)
+# @pytest.mark.django_db(transaction=True)
+@pytest.mark.django_db
 class TestUserLogin:
     """Test user login endpoints."""
 
@@ -81,7 +82,8 @@ class TestUserLogin:
         assert response.status_code == 401
 
 
-@pytest.mark.django_db(transaction=True)
+# @pytest.mark.django_db(transaction=True)
+@pytest.mark.django_db
 class TestUserProfile:
     """Test user profile endpoints."""
 
