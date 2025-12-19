@@ -111,7 +111,7 @@ class TenantAwareMiddleware:
                 subdomain=subdomain, active=True
             )
             cache.set(cache_key, tenant, timeout=TENANT_CACHE_TIMEOUT)
-            logger.info("tenant_loaded", tenant_id=str(tenant.id))
+            logger.info("tenant_loaded", tenant_subdomain=subdomain)
             return tenant
 
         except ObjectDoesNotExist:

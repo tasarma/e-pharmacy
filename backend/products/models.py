@@ -163,7 +163,7 @@ class Product(TenantAwareModel):
             UniqueTenantConstraint(fields=["sku"], name="unique_tenant_product_sku"),
             UniqueTenantConstraint(fields=["slug"], name="unique_tenant_product_slug"),
             CheckConstraint(
-                check=Q(stock_quantity__gte=0), name="stock_quantity_non_negative"
+                condition=Q(stock_quantity__gte=0), name="stock_quantity_non_negative"
             ),
         ]
         indexes = [
@@ -280,10 +280,11 @@ class ProductImage(TenantAwareModel):
     def save(self, *args, **kwargs):
         """Ensure only one primary image per product."""
         if self.is_primary:
-            ProductImage.objects.filter(product=self.product, is_primary=True).exclude(
-                id=self.id
-            ).update(is_primary=False)
-        super().save(*args, **kwargs)
+            with transaction.atomic():
+                ProductImage.objects.filter(product=self.product, is_primary=True).exclude(
+                    id=self.id
+                ).update(is_primary=False)
+                super().save(*args, **kwargs)
 
 
 class StockMovement(TenantAwareModel):
@@ -301,7 +302,7 @@ class StockMovement(TenantAwareModel):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     product = models.ForeignKey(
-        Product, on_delete=models.CASCADE, related_name="stock_movements"
+        Product, on_delete=models.PROTECT, related_name="stock_movements"
     )
 
     quantity_change = models.IntegerField(

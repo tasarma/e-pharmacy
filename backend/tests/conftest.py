@@ -1,8 +1,11 @@
 import pytest
 from django.contrib.auth import get_user_model
+from django.core.cache import cache
+
 from tenants.models import Tenant, TenantSettings
 from tenants.context import set_tenant_context, tenant_context_disabled
-from django.core.cache import cache
+from products.models import Category
+
 
 User = get_user_model()
 
@@ -112,8 +115,10 @@ def client():
 
 @pytest.fixture
 def category(db, tenant):
-    return Category.objects.create(
-        tenant=tenant,
-        name="Test Category",
-        slug="test-category"
-    )
+    with set_tenant_context(tenant=tenant):
+        category = Category.objects.create(
+            tenant=tenant,
+            name="Test Category",
+            slug="test-category"
+        )
+    return category
