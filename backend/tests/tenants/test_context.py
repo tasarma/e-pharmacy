@@ -8,7 +8,7 @@ from tenants.context import (
 from tenants.exceptions import TenantError
 
 
-@pytest.mark.django_db(transaction=True)
+@pytest.mark.django_db
 class TestTenantContext:
     """Test tenant context management."""
 

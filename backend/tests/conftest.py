@@ -1,14 +1,28 @@
 import pytest
 from django.contrib.auth import get_user_model
+from django.core.cache import cache
+
 from tenants.models import Tenant, TenantSettings
 from tenants.context import set_tenant_context, tenant_context_disabled
+from products.models import Category
 
 
 User = get_user_model()
 
 
+@pytest.fixture(autouse=True)
+def clear_cache_between_tests():
+    """
+    Clear the cache before (and/or after) each test to prevent
+    stale tenant objects from persisting across DB rollbacks.
+    """
+    cache.clear()
+    yield
+    cache.clear()
+
+
 @pytest.fixture
-def tenant():
+def tenant(db):
     """Create a test tenant."""
     with tenant_context_disabled():
         tenant = Tenant.objects.create(
@@ -18,7 +32,7 @@ def tenant():
 
 
 @pytest.fixture
-def inactive_tenant():
+def inactive_tenant(db):
     """Create an inactive tenant."""
     with tenant_context_disabled():
         tenant = Tenant.objects.create(
@@ -28,7 +42,7 @@ def inactive_tenant():
 
 
 @pytest.fixture
-def tenant_settings(tenant):
+def tenant_settings(db, tenant):
     """Create tenant settings."""
     with set_tenant_context(tenant=tenant):
         settings, created = TenantSettings.objects.get_or_create(
@@ -43,7 +57,7 @@ def tenant_settings(tenant):
 
 
 @pytest.fixture
-def manager(tenant):
+def manager(db, tenant):
     """Create manager user for tenant."""
     with set_tenant_context(tenant=tenant):
         user = User.objects.create_user(
@@ -57,7 +71,7 @@ def manager(tenant):
 
 
 @pytest.fixture
-def regular_user(tenant):
+def regular_user(db, tenant):
     """Create regular user for tenant."""
     with set_tenant_context(tenant=tenant):
         user = User.objects.create_user(
@@ -70,7 +84,7 @@ def regular_user(tenant):
 
 
 @pytest.fixture
-def other_tenant():
+def other_tenant(db):
     """Create second tenant for isolation tests."""
     with tenant_context_disabled():
         tenant = Tenant.objects.create(
@@ -80,7 +94,7 @@ def other_tenant():
 
 
 @pytest.fixture
-def other_tenant_user(other_tenant):
+def other_tenant_user(db, other_tenant):
     """Create user in different tenant."""
     with set_tenant_context(tenant=other_tenant):
         user = User.objects.create_user(
@@ -98,3 +112,12 @@ def client():
     from rest_framework.test import APIClient
 
     return APIClient()
+
+
+@pytest.fixture
+def category(db, tenant):
+    with set_tenant_context(tenant=tenant):
+        category = Category.objects.create(
+            tenant=tenant, name="Test Category", slug="test-category"
+        )
+    return category

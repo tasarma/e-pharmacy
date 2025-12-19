@@ -6,7 +6,7 @@ from tenants.context import set_tenant_context
 User = get_user_model()
 
 
-@pytest.mark.django_db(transaction=True)
+@pytest.mark.django_db
 class TestUserSignals:
     """Test user-related signals."""
 

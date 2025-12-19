@@ -1,24 +1,35 @@
 import pytest
 from django.contrib.auth import get_user_model
+import structlog
 
 User = get_user_model()
+
+logger = structlog.get_logger(__name__)
 
 
 @pytest.mark.django_db(transaction=True)
 class TestUserRegistration:
     """Test user registration endpoints."""
 
-    # def test_register_user_success(self, client, tenant):
-    #     """Test successful user registration."""
-    #     email = "newuser@test.com"
-    #     response = client.post(
-    #         "/auth/users/",
-    #         {"email": email, "password": "StrongPass123!"},
-    #         HTTP_HOST=f"{tenant.subdomain}.example.com",
-    #     )
-    #
-    #     assert response.status_code == 201
-    #     assert User.all_objects.filter(email="newuser@test.com").exists()
+    def test_register_user_success(self, client, tenant):
+        """Test successful user registration."""
+        email = "newuser@test.com"
+
+        response = client.post(
+            "/auth/users/",
+            {"email": email, "password": "StrongPass123!"},
+            content_type="application/json",
+            HTTP_HOST=f"{tenant.subdomain}.example.com",
+        )
+
+        assert response.status_code == 201
+
+        from tenants.context import set_tenant_context
+
+        # Verify the user exists in the correct tenant
+        # (We need to verify the context to query the global/tenant specific user table properly)
+        with set_tenant_context(tenant=tenant):
+            assert User.objects.filter(email=email).exists()
 
     def test_register_duplicate_email_same_tenant(self, client, manager):
         """Test registering duplicate email in same tenant fails."""
@@ -45,20 +56,19 @@ class TestUserRegistration:
 class TestUserLogin:
     """Test user login endpoints."""
 
-    # def test_login_success(self, client, regular_user):
-    #     """Test successful login."""
-    #     response = client.post(
-    #         '/auth/jwt/create/',
-    #         {
-    #             'email': regular_user.email,
-    #             'password': 'TestPass123!'
-    #         },
-    #         HTTP_HOST=f"{regular_user.tenant.subdomain}.example.com"
-    #     )
-    #
-    #     assert response.status_code == 200
-    #     assert 'access' in response.data
-    #     assert 'refresh' in response.data
+    def test_login_success(self, client, regular_user):
+        """Test successful login."""
+
+        response = client.post(
+            "/auth/jwt/create/",
+            {"email": regular_user.email, "password": "TestPass123!"},
+            content_type="application/json",
+            HTTP_HOST=f"{regular_user.tenant.subdomain}.example.com",
+        )
+
+        assert response.status_code == 200
+        assert "access" in response.data
+        assert "refresh" in response.data
 
     def test_login_wrong_password(self, client, manager):
         """Test login fails with wrong password."""
@@ -81,7 +91,8 @@ class TestUserLogin:
         assert response.status_code == 401
 
 
-@pytest.mark.django_db(transaction=True)
+# @pytest.mark.django_db(transaction=True)
+@pytest.mark.django_db
 class TestUserProfile:
     """Test user profile endpoints."""
 

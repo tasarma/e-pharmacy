@@ -10,7 +10,7 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 
 
-@pytest.mark.django_db(transaction=True)
+@pytest.mark.django_db
 class TestTenantAwareUserCreateSerializer:
     """Test user creation serializer."""
 
@@ -68,7 +68,7 @@ class TestTenantAwareUserCreateSerializer:
             assert "password" not in serializer.data
 
 
-@pytest.mark.django_db(transaction=True)
+@pytest.mark.django_db
 class TestTenantAwareTokenObtainSerializer:
     """Test JWT token serializer."""
 
