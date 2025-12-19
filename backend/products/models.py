@@ -281,9 +281,9 @@ class ProductImage(TenantAwareModel):
         """Ensure only one primary image per product."""
         if self.is_primary:
             with transaction.atomic():
-                ProductImage.objects.filter(product=self.product, is_primary=True).exclude(
-                    id=self.id
-                ).update(is_primary=False)
+                ProductImage.objects.filter(
+                    product=self.product, is_primary=True
+                ).exclude(id=self.id).update(is_primary=False)
                 super().save(*args, **kwargs)
 
 

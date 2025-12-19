@@ -13,12 +13,13 @@ User = get_user_model()
 @pytest.fixture(autouse=True)
 def clear_cache_between_tests():
     """
-    Clear the cache before (and/or after) each test to prevent 
+    Clear the cache before (and/or after) each test to prevent
     stale tenant objects from persisting across DB rollbacks.
     """
     cache.clear()
     yield
     cache.clear()
+
 
 @pytest.fixture
 def tenant(db):
@@ -117,8 +118,6 @@ def client():
 def category(db, tenant):
     with set_tenant_context(tenant=tenant):
         category = Category.objects.create(
-            tenant=tenant,
-            name="Test Category",
-            slug="test-category"
+            tenant=tenant, name="Test Category", slug="test-category"
         )
     return category

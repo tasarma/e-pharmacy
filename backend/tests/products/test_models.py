@@ -1,11 +1,10 @@
 import pytest
-import threading
 from concurrent.futures import ThreadPoolExecutor
 from decimal import Decimal
 from django.core.exceptions import ValidationError
-from django.db import connection, connections, DatabaseError
+from django.db import connections, DatabaseError
 
-from products.models import Product, Category, StockMovement
+from products.models import Product, Category
 from tenants.context import set_tenant_context
 from tenants.exceptions import TenantError
 
@@ -15,10 +14,11 @@ logger = structlog.get_logger(__name__)
 
 # --- CONCURRENCY TEST ---
 
+
 @pytest.mark.django_db(transaction=True)
 def test_product_stock_concurrency(tenant, category):
     """
-    Test that 5 threads trying to buy the last item results in 
+    Test that 5 threads trying to buy the last item results in
     exactly 1 success and 4 failures.
 
     We use transaction=True to ensure real database commits occur,
@@ -33,7 +33,7 @@ def test_product_stock_concurrency(tenant, category):
             slug="hot-item",
             price=Decimal("10.00"),
             track_inventory=True,
-            stock_quantity=1  # Only 1 available!
+            stock_quantity=1,  # Only 1 available!
         )
 
     # 2. Define the function that each thread will execute
@@ -48,15 +48,15 @@ def test_product_stock_concurrency(tenant, category):
                 p = Product.objects.get(id=product.id)
                 p.adjust_stock(-1, reason=f"Thread-{thread_id}")
                 return "success"
-            except (ValidationError, TenantError) as e:
+            except (ValidationError, TenantError):
                 return "failed"
             except DatabaseError as e:
-                # SQLite specific: Since SQLite uses database-level locking, concurrent 
-                # threads often hit a 'database is locked' error immediately rather than 
+                # SQLite specific: Since SQLite uses database-level locking, concurrent
+                # threads often hit a 'database is locked' error immediately rather than
                 # waiting for the lock to release (standard Row-Level Locking in Postgres).
                 # We treat this as a 'failed' purchase attempt for the sake of the test.
                 if "locked" in str(e).lower():
-                    return "failed" 
+                    return "failed"
                 return f"error: {str(e)}"
 
     # 3. Spin up 5 concurrent threads
@@ -78,7 +78,9 @@ def test_product_stock_concurrency(tenant, category):
     assert fail_count == 4, "4 threads should have failed due to insufficient stock"
     assert product.stock_quantity == 0, "Stock should be exactly 0"
 
+
 # --- CIRCULAR DEPENDENCY TEST ---
+
 
 @pytest.mark.django_db
 def test_category_circular_dependency(tenant):
@@ -91,21 +93,15 @@ def test_category_circular_dependency(tenant):
         cat_a = Category.objects.create(tenant=tenant, name="Category A", slug="cat-a")
 
         cat_b = Category.objects.create(
-            tenant=tenant, 
-            name="Category B", 
-            slug="cat-b", 
-            parent=cat_a
+            tenant=tenant, name="Category B", slug="cat-b", parent=cat_a
         )
 
         cat_c = Category.objects.create(
-            tenant=tenant, 
-            name="Category C", 
-            slug="cat-c", 
-            parent=cat_b
+            tenant=tenant, name="Category C", slug="cat-c", parent=cat_b
         )
 
     # Verify initial structure is valid
-    cat_a.clean() # Should pass
+    cat_a.clean()  # Should pass
 
     # 2. Create the circle (Set A's parent to C)
     cat_a.parent = cat_c
@@ -115,6 +111,7 @@ def test_category_circular_dependency(tenant):
         cat_a.clean()
 
     assert "Circular parent relationship detected" in str(exc_info.value)
+
 
 @pytest.mark.django_db
 def test_category_self_reference(tenant):
