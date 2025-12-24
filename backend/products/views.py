@@ -18,26 +18,30 @@ class CategoryViewSet(viewsets.ModelViewSet):
     Manager and Super Admin can create/update, all authenticated users can read.
     """
 
-    serializer_class = [CategorySerializer]
-    permission_class = [IsAuthenticated, IsStaffOrReadOnly]
+    serializer_class = CategorySerializer
+    permission_classes = [IsAuthenticated, IsStaffOrReadOnly]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ["name", "description"]
     ordering_fields = ["name", "display_order", "created_at"]
     ordering = ["display_order", "name"]
 
     def get_queryset(self):
-        queryset = Category.objects.filter(is_active=True).anotate(
-            # Count related items at the DB level
-            active_children_count=Count(
-                "children", filter=Q(children__is_active=True), distinct=True
-            ),
-            active_products_count=Count(
-                "products", filter=Q(products__is_active=True), distinct=True
-            ).select_related("parent"),
+        queryset = (
+            Category.objects.filter(is_active=True)
+            .annotate(
+                # Count related items at the DB level
+                active_children_count=Count(
+                    "children", filter=Q(children__is_active=True), distinct=True
+                ),
+                active_products_count=Count(
+                    "products", filter=Q(products__is_active=True), distinct=True
+                ),
+            )
+            .select_related("parent")
         )
 
         if self.action == "list":
-            is_active = self.request.query_params.get("is_activ")
+            is_active = self.request.query_params.get("is_active")
             if is_active is not None:
                 queryset = queryset.filter(is_active=is_active.lower() == "true")
 
