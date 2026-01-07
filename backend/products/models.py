@@ -6,6 +6,7 @@ from decimal import Decimal
 import uuid
 
 from tenants.models import TenantAwareModel, UniqueTenantConstraint
+from .validators import validate_image_size
 
 
 class Category(TenantAwareModel):
@@ -24,6 +25,7 @@ class Category(TenantAwareModel):
         upload_to="categories/%Y/%m/",  # MEDIA_ROOT/categories/2025/12/
         blank=True,
         null=True,
+        validators=[validate_image_size],
     )
 
     # SEO
@@ -61,9 +63,15 @@ class Category(TenantAwareModel):
 
             # Check for circular reference
             parent = self.parent
+            depth = 0
+            MAX_DEPTH = 100
+
             while parent:
+                depth += 1
                 if parent == self:
                     raise ValidationError("Circular parent relationship detected")
+                if depth > MAX_DEPTH:
+                    raise ValidationError("Max category depth exceeded")
                 parent = parent.parent
 
     def get_ancestors(self):
@@ -260,7 +268,7 @@ class ProductImage(TenantAwareModel):
         Product, on_delete=models.CASCADE, related_name="images"
     )
     image = models.ImageField(
-        upload_to="products/%Y/%m/"
+        upload_to="products/%Y/%m/", validators=[validate_image_size]
     )  # MEDIA_ROOT/products/2025/12/
     alt_text = models.CharField(max_length=200, blank=True)
     display_order = models.PositiveIntegerField(default=0)
