@@ -1,10 +1,7 @@
-.PHONY: format tests run test test-cov test-fast
+.PHONY: format tests run test test-cov test-fast venv sync
 
 format:
 	pre-commit run --all-files
-
-test:
-	python manage.py test  --parallel auto --keepdb --settings=config.settings_test tests
 
 run:
 	python manage.py runserver
@@ -20,3 +17,9 @@ test-fast:
 
 test-watch:
 	ptw -- --testmon
+
+venv:
+	uv venv
+
+sync:
+	uv sync --group dev  # Install main dependencies with dev dependency group
