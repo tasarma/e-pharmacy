@@ -138,4 +138,8 @@ GitHub.sublime-settings
 !.vscode/extensions.json
 .history
 
+# Virtual Environment
 .venv/*
+
+# Prompt that contains qs for LLMs
+docs/dev_helpful_prompts.md
