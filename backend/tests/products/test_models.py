@@ -126,3 +126,62 @@ def test_category_self_reference(tenant):
         cat_a.clean()
 
     assert "Category cannot be its own parent" in str(exc_info.value)
+
+
+@pytest.mark.django_db
+def test_product_validation(tenant, category):
+    """Test product model validation logic."""
+    with set_tenant_context(tenant=tenant):
+        # 1. Test compare_at_price validation
+        product = Product(
+            tenant=tenant,
+            category=category,
+            name="Invalid Price",
+            slug="invalid-price",
+            price=Decimal("100.00"),
+            compare_at_price=Decimal("90.00"),  # Less than price
+        )
+        with pytest.raises(ValidationError) as exc:
+            product.clean()
+        assert "Compare at price must be greater than regular price" in str(exc.value)
+
+        # 2. Test inventory validation
+        product = Product(
+            tenant=tenant,
+            category=category,
+            name="Invalid Inventory",
+            slug="invalid-inventory",
+            price=Decimal("10.00"),
+            track_inventory=False,
+            stock_quantity=10,  # Cannot have stock if not tracking
+        )
+        with pytest.raises(ValidationError) as exc:
+            product.clean()
+        assert "Cannot have stock quantity when not tracking inventory" in str(
+            exc.value
+        )
+
+
+@pytest.mark.django_db
+def test_product_image_primary_logic(tenant, product):
+    """Test that only one image can be primary per product."""
+    from products.models import ProductImage
+
+    with set_tenant_context(tenant=tenant):
+        # Create first primary image
+        img1 = ProductImage.objects.create(
+            tenant=tenant, product=product, image="products/img1.jpg", is_primary=True
+        )
+
+        assert img1.is_primary is True
+
+        # Create second primary image
+        img2 = ProductImage.objects.create(
+            tenant=tenant, product=product, image="products/img2.jpg", is_primary=True
+        )
+
+        # Refresh img1
+        img1.refresh_from_db()
+
+        assert img2.is_primary is True
+        assert img1.is_primary is False  # Should be automatically unset
