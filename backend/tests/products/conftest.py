@@ -1,13 +1,9 @@
 import pytest
 from django.contrib.auth import get_user_model
-from django.core.cache import cache
 
-from tenants.context import set_tenant_context, tenant_context_disabled
+from tenants.context import set_tenant_context
 from decimal import Decimal
-from products.models import (
-    Category, Product, ProductImage, 
-    ProductTag, ProductTagAssignment
-)
+from products.models import Category, Product, ProductTag
 
 
 User = get_user_model()
@@ -32,9 +28,7 @@ def parent_category(db, tenant):
     """Create a parent category."""
     with set_tenant_context(tenant=tenant):
         category = Category.objects.create(
-            name="Parent Category",
-            slug="parent-category",
-            is_active=True
+            name="Parent Category", slug="parent-category", is_active=True
         )
     return category
 
@@ -47,7 +41,7 @@ def child_category(db, tenant, parent_category):
             name="Child Category",
             slug="child-category",
             parent=parent_category,
-            is_active=True
+            is_active=True,
         )
     return category
 
@@ -63,13 +57,13 @@ def product(db, tenant, category):
             description="Test product description",
             short_description="Short description",
             category=category,
-            price=Decimal('99.99'),
-            compare_at_price=Decimal('149.99'),
-            cost_price=Decimal('50.00'),
+            price=Decimal("99.99"),
+            compare_at_price=Decimal("149.99"),
+            cost_price=Decimal("50.00"),
             track_inventory=True,
             stock_quantity=100,
             low_stock_threshold=10,
-            is_active=True
+            is_active=True,
         )
     return product
 
@@ -84,10 +78,10 @@ def product_no_inventory(db, tenant, category):
             sku="DIG-001",
             description="Digital product",
             category=category,
-            price=Decimal('29.99'),
+            price=Decimal("29.99"),
             track_inventory=False,
             stock_quantity=0,
-            is_active=True
+            is_active=True,
         )
     return product
 
@@ -102,11 +96,11 @@ def low_stock_product(db, tenant, category):
             sku="LOW-001",
             description="Low stock",
             category=category,
-            price=Decimal('19.99'),
+            price=Decimal("19.99"),
             track_inventory=True,
             stock_quantity=5,
             low_stock_threshold=10,
-            is_active=True
+            is_active=True,
         )
     return product
 
@@ -121,10 +115,10 @@ def out_of_stock_product(db, tenant, category):
             sku="OUT-001",
             description="Out of stock",
             category=category,
-            price=Decimal('39.99'),
+            price=Decimal("39.99"),
             track_inventory=True,
             stock_quantity=0,
-            is_active=True
+            is_active=True,
         )
     return product
 
@@ -133,8 +127,5 @@ def out_of_stock_product(db, tenant, category):
 def product_tag(db, tenant):
     """Create a product tag."""
     with set_tenant_context(tenant=tenant):
-        tag = ProductTag.objects.create(
-            name="Test Tag",
-            slug="test-tag"
-        )
+        tag = ProductTag.objects.create(name="Test Tag", slug="test-tag")
     return tag

@@ -3,6 +3,7 @@ from rest_framework.test import APIClient
 from products.models import ProductTag
 from tenants.context import set_tenant_context
 
+
 @pytest.mark.django_db
 class TestProductTagAPI:
     """Test Product Tag API endpoints."""
@@ -16,8 +17,7 @@ class TestProductTagAPI:
         client.force_authenticate(user=manager)
 
         response = client.get(
-            '/api/products/tags/',
-            HTTP_HOST=f"{manager.tenant.subdomain}.example.com"
+            "/api/products/tags/", HTTP_HOST=f"{manager.tenant.subdomain}.example.com"
         )
 
         assert response.status_code == 200
@@ -28,25 +28,22 @@ class TestProductTagAPI:
         client.force_authenticate(user=manager)
 
         response = client.post(
-            '/api/products/tags/',
-            {
-                'name': 'New Tag',
-                'slug': 'new-tag'
-            },
-            format='json',
-            HTTP_HOST=f"{manager.tenant.subdomain}.example.com"
+            "/api/products/tags/",
+            {"name": "New Tag", "slug": "new-tag"},
+            format="json",
+            HTTP_HOST=f"{manager.tenant.subdomain}.example.com",
         )
 
         assert response.status_code == 201
-        assert response.data['name'] == 'New Tag'
+        assert response.data["name"] == "New Tag"
 
     def test_delete_tag(self, client, manager, product_tag):
         """Test deleting a tag."""
         client.force_authenticate(user=manager)
 
         response = client.delete(
-            f'/api/products/tags/{product_tag.id}/',
-            HTTP_HOST=f"{manager.tenant.subdomain}.example.com"
+            f"/api/products/tags/{product_tag.id}/",
+            HTTP_HOST=f"{manager.tenant.subdomain}.example.com",
         )
 
         assert response.status_code == 204
