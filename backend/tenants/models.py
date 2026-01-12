@@ -211,9 +211,11 @@ class TenantAwareAbstract(models.Model):
     def save(self, *args, **kwargs) -> None:
         current_tenant = get_current_tenant()
 
-        if self.pk is None:
+        # To track whether an instance corresponds to a row in the db
+        if self._state.adding:
             # New object - set tenant
-            setattr(self, TENANT_FIELD_NAME, current_tenant)
+            if getattr(self, TENANT_FIELD_NAME, None) is None:
+                setattr(self, TENANT_FIELD_NAME, current_tenant)
         else:
             # Existing object - prevent tenant switching
             existing_tenant = getattr(self, TENANT_FIELD_NAME, None)

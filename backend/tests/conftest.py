@@ -4,7 +4,6 @@ from django.core.cache import cache
 
 from tenants.models import Tenant, TenantSettings
 from tenants.context import set_tenant_context, tenant_context_disabled
-from products.models import Category
 
 
 User = get_user_model()
@@ -21,7 +20,7 @@ def clear_cache_between_tests():
     cache.clear()
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def tenant(db):
     """Create a test tenant."""
     with tenant_context_disabled():
@@ -71,6 +70,20 @@ def manager(db, tenant):
 
 
 @pytest.fixture
+def superadmin(db):
+    """Create superadmin user."""
+    with tenant_context_disabled():
+        user = User.objects.create_user(
+            email="admin@e-pharmacy.com",
+            password="TestPass123!",
+            role="admin",
+            is_staff=True,
+            is_superuser=True,
+        )
+    return user
+
+
+@pytest.fixture
 def regular_user(db, tenant):
     """Create regular user for tenant."""
     with set_tenant_context(tenant=tenant):
@@ -112,12 +125,3 @@ def client():
     from rest_framework.test import APIClient
 
     return APIClient()
-
-
-@pytest.fixture
-def category(db, tenant):
-    with set_tenant_context(tenant=tenant):
-        category = Category.objects.create(
-            tenant=tenant, name="Test Category", slug="test-category"
-        )
-    return category
