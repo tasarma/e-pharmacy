@@ -293,6 +293,8 @@ class ProductImage(TenantAwareModel):
                     product=self.product, is_primary=True
                 ).exclude(id=self.id).update(is_primary=False)
                 super().save(*args, **kwargs)
+        else:
+            super().save(*args, **kwargs)
 
 
 class StockMovement(TenantAwareModel):

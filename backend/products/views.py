@@ -16,8 +16,9 @@ from .serializers import (
     ProductImageSerializer,
     ProductTagSerializer,
     StockAdjustmentSerializer,
+    StockMovementSerializer,
 )
-from .permissions import IsStaffOrReadOnly
+from .permissions import IsStaffOrReadOnly, IsTenantUser
 
 from tenants.context import get_current_tenant
 
@@ -32,7 +33,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
     """
 
     serializer_class = CategorySerializer
-    permission_classes = [IsAuthenticated, IsStaffOrReadOnly]
+    permission_classes = [IsAuthenticated, IsTenantUser, IsStaffOrReadOnly]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ["name", "description"]
     ordering_fields = ["name", "display_order", "created_at"]
@@ -65,6 +66,14 @@ class CategoryViewSet(viewsets.ModelViewSet):
         return queryset
 
     @action(detail=True, methods=["get"])
+    def children(self, request, pk=None):
+        """Get child categories."""
+        category = self.get_object()
+        children = category.children.filter(is_active=True)
+        serializer = self.get_serializer(children, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=["get"])
     def products(self, request, pk=None):
         """Get products in this category"""
         category = self.get_object()
@@ -90,7 +99,7 @@ class ProductViewSet(viewsets.ModelViewSet):
     Staff can create/update, all authenticated users can read.
     """
 
-    permission_classes = [IsAuthenticated, IsStaffOrReadOnly]
+    permission_classes = [IsAuthenticated, IsTenantUser, IsStaffOrReadOnly]
     parser_classes = [MultiPartParser, FormParser, JSONParser]
     filter_backends = [
         DjangoFilterBackend,
@@ -98,7 +107,7 @@ class ProductViewSet(viewsets.ModelViewSet):
         filters.OrderingFilter,
     ]
     filterset_class = ProductFilter
-    search_fields = ["name", "sku", "barcode", "description"]
+    search_fields = ["name", "sku", "description"]
     ordering_fields = ["name", "price", "created_at", "stock_quantity"]
     ordering = ["-created_at"]
 
@@ -116,6 +125,10 @@ class ProductViewSet(viewsets.ModelViewSet):
         )
 
         queryset = Product.objects.select_related("category")
+
+        # Filter inactive products for non-staff users
+        if not self.request.user.is_staff:
+            queryset = queryset.filter(is_active=True)
 
         # Detailed prefetch for single object or specific actions
         if self.action in ["retrieve", "update", "partial_update"]:
@@ -170,6 +183,15 @@ class ProductViewSet(viewsets.ModelViewSet):
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+    @action(detail=True, methods=["get"])
+    def stock_history(self, request, pk=None):
+        """Get stock movement history for a product."""
+        product = self.get_object()
+        movements = product.stock_movements.all().order_by("-created_at")
+
+        serializer = StockMovementSerializer(movements, many=True)
+        return Response(serializer.data)
+
     @action(detail=False, methods=["get"])
     def low_stock(self, request):
         products = self.get_queryset().filter(
@@ -205,7 +227,7 @@ class ProductImageViewSet(viewsets.ModelViewSet):
     """Manage product images."""
 
     serializer_class = ProductImageSerializer
-    permission_classes = [IsAuthenticated, IsStaffOrReadOnly]
+    permission_classes = [IsAuthenticated, IsTenantUser, IsStaffOrReadOnly]
     parser_classes = [MultiPartParser, FormParser]
 
     def get_queryset(self):
@@ -221,7 +243,7 @@ class ProductTagViewSet(viewsets.ModelViewSet):
     """Manage product tags."""
 
     serializer_class = ProductTagSerializer
-    permission_classes = [IsAuthenticated, IsStaffOrReadOnly]
+    permission_classes = [IsAuthenticated, IsTenantUser, IsStaffOrReadOnly]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ["name"]
     ordering = ["name"]

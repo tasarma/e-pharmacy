@@ -117,6 +117,7 @@ class ProductImageSerializer(serializers.ModelSerializer):
         model = ProductImage
         fields = [
             "id",
+            "product",
             "image",
             "image_url",
             "alt_text",
