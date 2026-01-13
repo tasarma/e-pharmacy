@@ -1,10 +1,9 @@
-# Django #
-*.log
+# Backend Specific
 *.pot
 *.pyc
-__pycache__
+__pycache__/
 db.sqlite3
-media
+media/
 */migrations/
 
 # Backup files #
@@ -46,25 +45,13 @@ out/
 # JIRA plugin
 atlassian-ide-plugin.xml
 
-# Python #
-*.py[cod]
-*$py.class
-
-# Distribution / packaging
-.Python build/
+# Python / Distribution
+build/
 develop-eggs/
 dist/
 downloads/
 eggs/
 .eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.whl
-*.egg-info/
 .installed.cfg
 *.egg
 *.manifest
@@ -74,7 +61,7 @@ wheels/
 pip-log.txt
 pip-delete-this-directory.txt
 
-# Unit test / coverage reports
+# Unit test / coverage
 htmlcov/
 .tox/
 .coverage
@@ -100,15 +87,14 @@ celerybeat-schedule.*
 
 # Environments
 .env
-.venv
+.venv/
 env/
 venv/
 ENV/
-env.bak/
-venv.bak/
 
-# mkdocs documentation
+# Documentation
 /site
+docs/dev_helpful_prompts.md
 
 # mypy
 .mypy_cache/
@@ -140,6 +126,3 @@ GitHub.sublime-settings
 
 # Virtual Environment
 .venv/*
-
-# Prompt that contains qs for LLMs
-docs/dev_helpful_prompts.md
