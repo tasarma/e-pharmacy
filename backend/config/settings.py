@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     "django_structlog",
     "health_check",
     "health_check.cache",
+    "corsheaders",
     # Local apps
     "tenants",
     "users",
@@ -59,6 +60,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -267,3 +269,11 @@ CACHES = {
         # }
     }
 }
+
+# In Production, only allow your specific frontend domain
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+]
+
+# If using cookies for auth, add this
+# CORS_ALLOW_CREDENTIALS = True

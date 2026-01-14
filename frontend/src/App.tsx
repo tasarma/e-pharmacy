@@ -17,7 +17,7 @@ function App() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-white shadow-lg rounded-lg p-6">
         <h1 className="text-2xl font-bold text-gray-800 mb-4">System Status</h1>
-        
+
         {error && (
           <div className="p-3 bg-red-100 text-red-700 rounded-md">
             Connection Failed: {error}

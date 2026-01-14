@@ -33,7 +33,7 @@ urlpatterns = [
     # TO-DO!!!
     # Restrict this endpoint at the Load Balancer (Nginx/AWS ALBs) level so only internal monitoring tools can see it
     # Health Check
-    path("health/", include('health_check.urls')),
+    path("health/", include("health_check.urls")),
     # Auth
     re_path(r"^auth/", include("djoser.urls")),
     re_path(r"^auth/", include("djoser.urls.jwt")),
