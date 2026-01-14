@@ -50,11 +50,12 @@ INSTALLED_APPS = [
     "djoser",
     "drf_spectacular",
     "django_structlog",
+    "health_check",
+    "health_check.cache",
     # Local apps
     "tenants",
     "users",
     "products",
-    "health_check",
 ]
 
 MIDDLEWARE = [

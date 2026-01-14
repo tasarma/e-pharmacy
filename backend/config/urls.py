@@ -30,6 +30,10 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/tenants/", include("tenants.urls")),
     path("api/products/", include("products.urls")),
+    # TO-DO!!!
+    # Restrict this endpoint at the Load Balancer (Nginx/AWS ALBs) level so only internal monitoring tools can see it
+    # Health Check
+    path("health/", include('health_check.urls')),
     # Auth
     re_path(r"^auth/", include("djoser.urls")),
     re_path(r"^auth/", include("djoser.urls.jwt")),
