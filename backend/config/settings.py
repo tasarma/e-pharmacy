@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     "tenants",
     "users",
     "products",
+    "health_check",
 ]
 
 MIDDLEWARE = [
