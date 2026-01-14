@@ -8,7 +8,7 @@ import structlog
 import re
 
 from .context import get_state, get_current_tenant
-from config.regex_validators import phone_validator
+from utils.regex_validators import phone_validator
 
 
 logger = structlog.get_logger(__name__)
