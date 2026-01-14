@@ -23,9 +23,6 @@ from .permissions import IsStaffOrReadOnly, IsTenantUser
 from tenants.context import get_current_tenant
 
 
-from tenants.context import get_current_tenant
-
-
 logger = structlog.get_logger(__name__)
 
 
