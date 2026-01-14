@@ -9,7 +9,7 @@ from django.core.checks import Error
 from tenants.models import Tenant, TenantAwareModel, UniqueTenantConstraint
 from users.managers import CustomUserManager, TenantAwareUserManager
 
-from config.regex_validators import phone_validator
+from utils.regex_validators import phone_validator
 
 
 ERROR_AUTH_EO33 = "auth.E003"
