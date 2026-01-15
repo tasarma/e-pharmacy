@@ -4,7 +4,7 @@ format:
 	pre-commit run --all-files
 
 run:
-	python manage.py runserver
+	python src/manage.py runserver
 
 test:
 	pytest -v
