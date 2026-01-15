@@ -28,6 +28,7 @@ dev = [
 ]
 
 [tool.pytest.ini_options]
+pythonpath = "src"
 DJANGO_SETTINGS_MODULE = "config.settings"
 python_files = ["test_*.py", "*_test.py"]
 python_classes = ["Test*"]
@@ -41,7 +42,7 @@ addopts = [
     # "--cov-fail-under=80",
     "-v"
 ]
-testpaths = ["tests"]
+testpaths = ["src/tests"]
 markers = [
     "unit: Unit tests",
     "integration: Integration tests",
