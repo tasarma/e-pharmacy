@@ -4,6 +4,7 @@
 .DS_Store
 *.log
 *.sw?
+.agent/
 
 # Project specific
 .ruff_cache
