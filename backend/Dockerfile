@@ -15,7 +15,7 @@ WORKDIR /app
 COPY --from=ghcr.io/astral-sh/uv:0.9.26 /uv /uvx /bin/
 
 # Install system dependencies (uncomment if needed, e.g. for Postgres or Pillow)
-# RUN apt-get update && apt-get install -y --no-install-recommends gcc libpq-dev && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends gcc libpq-dev make && rm -rf /var/lib/apt/lists/*
 
 # --- Stage 2: Dependencies ---
 FROM base AS deps
