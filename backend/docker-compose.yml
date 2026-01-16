@@ -1,0 +1,25 @@
+services:
+  backend-dev:
+    build:
+      context: .
+      target: dev
+    volumes:
+      - ./src:/app/src
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=1
+      - DJANGO_SETTINGS_MODULE=config.settings
+    command: python src/manage.py runserver 0.0.0.0:8000
+
+  # production-like configuration (run with docker compose --profile prod up)
+  backend-prod:
+    profiles: ["prod"]
+    build:
+      context: .
+      target: service
+    ports:
+      - "9000:8000"
+    environment:
+      - DEBUG=0
+      - DJANGO_SETTINGS_MODULE=config.settings

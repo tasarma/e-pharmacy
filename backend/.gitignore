@@ -4,7 +4,7 @@
 __pycache__/
 db.sqlite3
 media/
-*/migrations/
+src/*/migrations/
 
 # Backup files #
 *.bak
@@ -126,3 +126,4 @@ GitHub.sublime-settings
 
 # Virtual Environment
 .venv/*
+src/backend.egg-info
