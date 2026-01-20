@@ -127,3 +127,4 @@ GitHub.sublime-settings
 # Virtual Environment
 .venv/*
 src/backend.egg-info
+staticfiles
