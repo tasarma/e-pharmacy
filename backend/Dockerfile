@@ -54,7 +54,8 @@ ARG USER_ID=1234
 
 # Copy only necessary files from release
 WORKDIR /app
-COPY --from=release /app /app
+COPY --from=release /app/.venv /app/.venv
+COPY --from=release /app/src /app/src
 
 # Set envs again
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -70,4 +71,4 @@ USER django-user
 EXPOSE 8000
 
 ENTRYPOINT ["gunicorn"]
-CMD ["config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "2", "--access-logfile", "-"]
+CMD ["config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "2", "--threads", "4", --access-logfile", "-"]
