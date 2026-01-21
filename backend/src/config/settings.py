@@ -29,6 +29,7 @@ if "DJANGO_DEBUG_FALSE" in os.environ:
     # SECURITY WARNING: keep the secret key used in production secret!
     SECRET_KEY = os.environ["DJANGO_SECRET_KEY"]
     ALLOWED_HOSTS = [os.environ["DJANGO_ALLOWED_HOST"]]
+    DB_PATH = os.environ["DJANGO_DB_PATH"]
 else:
     DEBUG = True
     SECRET_KEY = "django-insecure-%uualk)bx%m1wk3(965@lf^u58&mm%a*5gk@*vy+w__ss=y_gj"
@@ -37,6 +38,7 @@ else:
         "127.0.0.1",
         ".example.com",
     ]
+    DB_PATH = BASE_DIR / "db.sqlite3"
 
 # Application definition
 
@@ -102,7 +104,7 @@ WSGI_APPLICATION = "config.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "NAME": DB_PATH,
     }
 }
 

@@ -50,6 +50,8 @@ RUN python src/manage.py collectstatic --noinput
 # --- Stage 6: Final Service ---
 FROM python:3.14-slim AS service
 
+ARG USER_ID=1234
+
 # Copy only necessary files from release
 WORKDIR /app
 COPY --from=release /app /app
@@ -61,7 +63,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONPATH="/app/src"
 
 # Create a non-privileged user
-RUN useradd -m django-user && \
+RUN useradd -m -u ${USER_ID} django-user && \
     chown -R django-user:django-user /app
 USER django-user
 
