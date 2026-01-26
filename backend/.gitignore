@@ -129,3 +129,23 @@ GitHub.sublime-settings
 src/backend.egg-info
 
 staticfiles
+
+# Terraform  #
+# Local provider plugins
+.terraform/
+
+# Local state files (DANGER: These contain secrets)
+terraform.tfstate
+terraform.tfstate.backup
+*.tfstate
+*.tfstate.backup
+
+# Variable files containing secrets
+*.tfvars
+*.tfvars.json
+
+# Crash logs
+crash.log
+
+# Local environment overrides
+.terraform.lock.hcl
