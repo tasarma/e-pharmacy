@@ -16,3 +16,8 @@ variable "key_name" {
  description = "SSH key pair name"
  type        = string
 }
+
+variable "profile" {
+ description = "AWS profile name"
+ type        = string
+}
