@@ -1,0 +1,4 @@
+aws_region    = 
+instance_name = 
+instance_type = "t3.micro"
+key_name      = 

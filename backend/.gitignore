@@ -143,9 +143,17 @@ terraform.tfstate.backup
 # Variable files containing secrets
 *.tfvars
 *.tfvars.json
+!.tfvars.example
 
 # Crash logs
 crash.log
 
 # Local environment overrides
 .terraform.lock.hcl
+
+# Ignore override files
+override.tf
+override.tf.json
+
+# Ignore SSH keys
+*.pem
