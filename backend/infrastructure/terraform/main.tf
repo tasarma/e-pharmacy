@@ -50,6 +50,7 @@ resource "aws_security_group" "app_sg" {
 resource "aws_instance" "backend" {
   ami           = data.aws_ami.ubuntu.id
   instance_type = var.instance_type
+  key_name      = var.key_name
 
   # Ensure a dynamic public IP is assigned
   associate_public_ip_address = true
