@@ -1,0 +1,42 @@
+- name: Basic Server Setup
+  hosts: servers
+  become: yes
+
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Create swap file
+      command: fallocate -l 2G /swapfile
+      args:
+        creates: /swapfile
+
+    - name: Set swap permissions
+      file:
+        path: /swapfile
+        mode: "0600"
+
+    - name: Make swap
+      command: mkswap /swapfile
+      when: ansible_facts["swaptotal_mb"] == 0
+
+    - name: Enable swap
+      command: swapon /swapfile
+      when: ansible_facts["swaptotal_mb"] == 0
+
+    - name: Install Docker
+      ansible.builtin.apt:
+        name:
+          - docker.io
+          - docker-compose-v2
+        state: latest
+      become: true
+
+    - name: Run test container
+      community.docker.docker_container:
+        name: testcontainer
+        state: started
+        image: busybox
+        command: echo hello world
+      become: true
