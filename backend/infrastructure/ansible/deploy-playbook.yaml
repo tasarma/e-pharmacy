@@ -1,0 +1,6 @@
+- name: Basic Server Setup
+  hosts: servers
+  become: yes
+  tasks:
+    - name: Ping to make sure we can to  our server
+      ansible.builtin.ping:
