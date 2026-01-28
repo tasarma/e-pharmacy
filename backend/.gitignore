@@ -157,3 +157,25 @@ override.tf.json
 
 # Ignore SSH keys
 *.pem
+
+# Ansible Retry files (generated when a playbook fails)
+*.retry
+
+# Ansible inventory files (if they contain hardcoded IPs)
+inventory.ini
+hosts
+
+# Ansible Vault password files (NEVER commit these)
+.vault_pass
+.vault-password
+vault-pass.txt
+
+# Local Ansible configuration overrides
+ansible.cfg
+
+# Log files
+*.log
+
+# Python compiled files (Ansible is Python-based)
+*.pyc
+__pycache__/
