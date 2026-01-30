@@ -1,29 +1,33 @@
 - name: Basic Server Setup
   hosts: servers
-  become: yes
 
   tasks:
     - name: Update apt cache
       apt:
         update_cache: yes
+      become: true
 
     - name: Create swap file
       command: fallocate -l 2G /swapfile
       args:
         creates: /swapfile
+      become: true
 
     - name: Set swap permissions
       file:
         path: /swapfile
         mode: "0600"
+      become: true
 
     - name: Make swap
       command: mkswap /swapfile
       when: ansible_facts["swaptotal_mb"] == 0
+      become: true
 
     - name: Enable swap
       command: swapon /swapfile
       when: ansible_facts["swaptotal_mb"] == 0
+      become: true
 
     - name: Install Docker
       ansible.builtin.apt:
@@ -43,9 +47,55 @@
     - name: Reset ssh connection to allow user/group change to take effect
       ansible.builtin.meta: reset_connection
 
-    - name: Run test container
+    # Uncomment one of them to build container
+    # It's slow on my machine, that's why I comment
+
+    # Use buildx to build
+    # - name: Build container image locally
+    #   community.docker.docker_image_build:
+    #     name: backend
+    #     tag: backend
+    #     path: ../..
+    #     target: service
+    #     platform: linux/amd64
+    #     rebuild: always
+    #   delegate_to: 127.0.0.1
+
+    # Use Python-based API to build
+    # - name: Build container image locally
+    #   community.docker.docker_image:
+    #     name: superlists
+    #     source: build
+    #     state: present
+    #     build:
+    #       path: ..
+    #       platform: linux/amd64
+    #     force_source: true
+    #   delegate_to: 127.0.0.1
+
+    - name: Export container image locally
+      community.docker.docker_image:
+        name: backend-backend-prod
+        archive_path: /tmp/backend-img.tar
+        source: local
+      delegate_to: 127.0.0.1
+
+    - name: Upload image to server
+      ansible.builtin.copy:
+        src: /tmp/backend-img.tar
+        dest: /tmp/backend-img.tar
+
+    - name: Import container image on server
+      community.docker.docker_image:
+        name: backend-backend-prod
+        load_path: /tmp/backend-img.tar
+        source: load
+        force_source: true
+        state: present
+
+    - name: Run backend container
       community.docker.docker_container:
-        name: testcontainer
+        name: backend
+        image: backend-backend-prod
         state: started
-        image: busybox
-        command: echo hello world
+        recreate: true
