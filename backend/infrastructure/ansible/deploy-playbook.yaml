@@ -64,7 +64,7 @@
     # Use Python-based API to build
     # - name: Build container image locally
     #   community.docker.docker_image:
-    #     name: superlists
+    #     name: backend
     #     source: build
     #     state: present
     #     build:
@@ -110,6 +110,13 @@
         src: ~/.secret-key
       register: secret_key
 
+    - name: Ensure db.sqlite3 file exists outside container
+      ansible.builtin.file:
+        path: "{{ ansible_env.HOME }}/db.sqlite3"
+        state: touch
+        owner: 1234 # so nonroot user can access it in container
+      become: true # needed for ownership change
+
     - name: Run backend container
       community.docker.docker_container:
         name: backend
@@ -117,8 +124,17 @@
         state: started
         recreate: true
         env:
-          DJANGO_DEBUG_FALSE: "1"
+          DJANGO_DEBUG_FALSE: "0"
           DJANGO_SECRET_KEY: "{{ secret_key.content | b64decode }}"
           DJANGO_ALLOWED_HOST: "{{ inventory_hostname }},localhost,127.0.0.1"
           DJANGO_DB_PATH: "/home/nonroot/db.sqlite3"
+        mounts:
+          - type: bind
+            source: "{{ ansible_env.HOME }}/db.sqlite3"
+            target: /home/nonroot/db.sqlite3
         ports: 80:8000
+
+    - name: Run migration inside container
+      community.docker.docker_container_exec:
+        container: backend
+        command: python3 src/manage.py migrate
