@@ -119,6 +119,6 @@
         env:
           DJANGO_DEBUG_FALSE: "1"
           DJANGO_SECRET_KEY: "{{ secret_key.content | b64decode }}"
-          DJANGO_ALLOWED_HOST: "{{ inventory_hostname }}"
+          DJANGO_ALLOWED_HOST: "{{ inventory_hostname }},localhost,127.0.0.1"
           DJANGO_DB_PATH: "/home/nonroot/db.sqlite3"
         ports: 80:8000
