@@ -425,11 +425,4 @@ This project is licensed under the MIT License - see the [LICENSE](/public/LICEN
 
 ---
 
-## 👨‍💻 Author
-
-**Dara** - Full Stack Developer  
-[GitHub](https://github.com/tasarma) | [LinkedIn](#)
-
----
-
 *Built with ❤️ using Django, React, and modern web technologies*
