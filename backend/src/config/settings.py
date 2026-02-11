@@ -284,6 +284,7 @@ CACHES = {
 # In Production, only allow your specific frontend domain
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
+    "http://tenantone.example.com:5173",
 ]
 
 # If using cookies for auth, add this
