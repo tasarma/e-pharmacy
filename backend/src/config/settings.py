@@ -22,14 +22,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
-if "DJANGO_DEBUG_FALSE" in os.environ:
+# Check if we are in production
+IF_PROD = "DJANGO_DEBUG_FALSE" in os.environ
+
+if IF_PROD:
     # SECURITY WARNING: don't run with debug turned on in production!
     DEBUG = False
-
-    # SECURITY WARNING: keep the secret key used in production secret!
-    SECRET_KEY = os.environ["DJANGO_SECRET_KEY"]
-    ALLOWED_HOSTS = [os.environ["DJANGO_ALLOWED_HOST"]]
-    DB_PATH = os.environ["DJANGO_DB_PATH"]
+    SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
+    # Split the string by commas to allow multiple hosts
+    ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOST", "").split(",")
+    DB_PATH = os.environ.get("DJANGO_DB_PATH")
 else:
     DEBUG = True
     SECRET_KEY = "django-insecure-%uualk)bx%m1wk3(965@lf^u58&mm%a*5gk@*vy+w__ss=y_gj"
@@ -37,6 +39,8 @@ else:
         "localhost",
         "127.0.0.1",
         ".example.com",
+        "staging.ottg.co.uk",
+        "ottg.co.uk",
     ]
     DB_PATH = BASE_DIR / "db.sqlite3"
 
@@ -280,6 +284,7 @@ CACHES = {
 # In Production, only allow your specific frontend domain
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
+    "http://tenantone.example.com:5173",
 ]
 
 # If using cookies for auth, add this

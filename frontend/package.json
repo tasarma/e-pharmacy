@@ -5,17 +5,25 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },
   "dependencies": {
+    "@reduxjs/toolkit": "^2.11.2",
     "@tanstack/react-query": "^5.90.16",
     "axios": "^1.13.2",
+    "bootstrap": "^5.3.8",
     "clsx": "^2.1.1",
+    "jwt-decode": "^4.0.0",
     "lucide-react": "^0.562.0",
     "react": "^19.2.0",
+    "react-bootstrap": "^2.10.10",
     "react-dom": "^19.2.0",
+    "react-owl-carousel": "^2.3.3",
+    "react-redux": "^9.2.0",
+    "react-router-dom": "^7.13.0",
+    "sass": "^1.97.3",
     "tailwind-merge": "^3.4.0",
     "zustand": "^5.0.10"
   },
